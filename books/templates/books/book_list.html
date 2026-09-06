@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>David - えほんいちらん</title>
+</head>
+<body>
+<h1>えほんをえらんでね</h1>
+<form method="get">
+<label>ねんれい: <input type="number" name="age" value="{{ age }}" min="0" max="12"> さい</label>
+<button type="submit">しぼりこむ</button>
+{% if age %}<a href="{% url 'book-list' %}">クリア</a>{% endif %}
+</form>
+<hr>
+{% for book in books %}
+<div style="margin-bottom: 24px;">
+{% if book.cover_image %}<img src="{{ book.cover_image.url }}" alt="{{ book.title }}" style="max-width: 200px;"><br>{% endif %}
+<strong><a href="{% url 'book-detail' book.pk %}">{{ book.title }}</a></strong><br>
+たいしょうねんれい: {{ book.age_min }}〜{{ book.age_max }}さい<br>
+{{ book.description_ja|default:book.description|truncatewords:20 }}
+</div>
+{% empty %}
+<p>えほんがありません。adminで登録してください。</p>
+{% endfor %}
+<hr>
+<p><a href="/admin/">管理画面</a></p>
+</body>
+</html>

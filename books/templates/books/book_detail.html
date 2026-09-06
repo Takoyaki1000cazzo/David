@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ book.title }} - David</title>
+</head>
+<body>
+<p><a href="{% url 'book-list' %}">← いちらんにもどる</a></p>
+<h1>{{ book.title }}</h1>
+<p>たいしょう: {{ book.age_min }}〜{{ book.age_max }}さい</p>
+{% if book.cover_image %}<img src="{{ book.cover_image.url }}" alt="{{ book.title }}" style="max-width: 240px;">{% endif %}
+{% if book.description_ja %}<p>{{ book.description_ja }}</p>{% elif book.description %}<p>{{ book.description }}</p>{% endif %}
+
+{% if page %}
+<hr>
+<p>ページ {{ current_no }} / {{ total }}</p>
+{% if page.image %}<div><img src="{{ page.image.url }}" alt="p{{ current_no }}" style="max-width: 400px;"></div>{% endif %}
+<p id="text-en" style="font-size: 1.4em;">{{ page.text_en }}</p>
+<p id="text-ja">{{ page.text_ja }}</p>
+
+<div>
+<label>はやさ: <input type="range" id="rate" min="0.5" max="1.5" step="0.1" value="0.9"> <span id="rate-val">0.9</span></label>
+<label><input type="checkbox" id="repeat"> リピート</label>
+<label><input type="checkbox" id="show-ja" checked> にほんごをひょうじ</label>
+</div>
+<div style="margin: 12px 0;">
+<button id="speak-btn">🔊 よみあげる</button>
+<button id="stop-btn">⏹ とめる</button>
+</div>
+<div>
+{% if has_prev %}<a href="?p={{ prev_no }}">← まえのページ</a>{% endif %}
+{% if has_next %} <a href="?p={{ next_no }}">つぎのページ →</a>{% endif %}
+</div>
+<script>
+const btn = document.getElementById('speak-btn');
+const stopBtn = document.getElementById('stop-btn');
+const rateInput = document.getElementById('rate');
+const rateVal = document.getElementById('rate-val');
+const repeatBox = document.getElementById('repeat');
+const showJaBox = document.getElementById('show-ja');
+const jaText = document.getElementById('text-ja');
+rateInput.addEventListener('input', () => { rateVal.textContent = rateInput.value; });
+showJaBox.addEventListener('change', () => { jaText.style.display = showJaBox.checked ? '' : 'none'; });
+function speak() {
+  if (!('speechSynthesis' in window)) { alert('このブラウザは読み上げに対応していません'); return; }
+  speechSynthesis.cancel();
+  const text = document.getElementById('text-en').textContent;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-US';
+  u.rate = parseFloat(rateInput.value);
+  const voices = speechSynthesis.getVoices();
+  const en = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en'));
+  if (en) u.voice = en;
+  u.onend = () => { if (repeatBox.checked) speak(); };
+  speechSynthesis.speak(u);
+}
+btn.addEventListener('click', speak);
+stopBtn.addEventListener('click', () => speechSynthesis.cancel());
+if (typeof speechSynthesis !== 'undefined') speechSynthesis.getVoices();
+</script>
+{% else %}
+<p>ページがまだありません。adminで追加してください。</p>
+{% endif %}
+</body>
+</html>
