@@ -1,1 +1,6 @@
 .venv/
+.env
+db.sqlite3
+*.save
+__pycache__/
+*.py[cod]
