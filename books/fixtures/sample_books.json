@@ -1,0 +1,41 @@
+[
+{
+  "model": "books.book",
+  "pk": 1,
+  "fields": {
+    "title": "The Red Apple",
+    "cover_image": "",
+    "age_min": 2,
+    "age_max": 5,
+    "description": "A simple picture book about a red apple.",
+    "description_ja": "赤いりんごについてのシンプルな絵本。",
+    "created_at": "2026-09-07T00:00:00Z"
+  }
+},
+{
+  "model": "books.page",
+  "pk": 1,
+  "fields": {
+    "book": 1,
+    "page_no": 1,
+    "text_en": "This is a red apple.",
+    "text_ja": "これは赤いりんごです。",
+    "image": "",
+    "audio_url": null,
+    "created_at": "2026-09-07T00:00:01Z"
+  }
+},
+{
+  "model": "books.page",
+  "pk": 2,
+  "fields": {
+    "book": 1,
+    "page_no": 2,
+    "text_en": "The apple is sweet.",
+    "text_ja": "りんごは甘いです。",
+    "image": "",
+    "audio_url": null,
+    "created_at": "2026-09-07T00:00:02Z"
+  }
+}
+]
