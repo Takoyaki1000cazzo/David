@@ -1,6 +1,7 @@
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.test import TestCase
+from django.urls import reverse
 
 from .models import Book, Page
 
@@ -32,3 +33,34 @@ class PageModelTests(TestCase):
         Page.objects.create(book=book, page_no=1, text_en='Hello')
         Page.objects.create(book=book, page_no=2, text_en='World')
         self.assertEqual(book.pages.count(), 2)
+
+
+class BookViewEmptyFieldsTests(TestCase):
+    def test_book_list_with_empty_description(self):
+        """説明文が空でも一覧画面が表示される"""
+        book = Book.objects.create(title='Test Book', age_min=2, age_max=5)
+        response = self.client.get(reverse('book-list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Test Book')
+
+    def test_book_list_with_empty_cover(self):
+        """表紙画像が空でも一覧画面が表示される"""
+        book = Book.objects.create(title='Test Book', age_min=2, age_max=5)
+        response = self.client.get(reverse('book-list'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_book_detail_with_empty_fields(self):
+        """説明文・表紙が空でも詳細画面が表示される"""
+        book = Book.objects.create(title='Test Book', age_min=2, age_max=5)
+        Page.objects.create(book=book, page_no=1, text_en='Hello')
+        response = self.client.get(reverse('book-detail', args=[book.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Test Book')
+
+    def test_book_detail_with_empty_page_image(self):
+        """ページ画像が空でも詳細画面が表示される"""
+        book = Book.objects.create(title='Test Book', age_min=2, age_max=5)
+        Page.objects.create(book=book, page_no=1, text_en='Hello', text_ja='こんにちは')
+        response = self.client.get(reverse('book-detail', args=[book.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Hello')
