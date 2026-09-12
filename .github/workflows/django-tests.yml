@@ -1,0 +1,66 @@
+name: Django tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: david
+          MYSQL_USER: david
+          MYSQL_PASSWORD: david
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DJANGO_SECRET_KEY: ci-insecure-secret-key-do-not-use-in-production
+      DEBUG: "True"
+      MYSQL_DATABASE: david
+      MYSQL_USER: david
+      MYSQL_PASSWORD: david
+      MYSQL_HOST: 127.0.0.1
+      MYSQL_PORT: "3306"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install system dependencies for mysqlclient
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y default-libmysqlclient-dev pkg-config
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run checks and migrations
+        run: |
+          python manage.py check
+          python manage.py migrate
+
+      - name: Grant privileges for test database
+        # manage.py test creates a separate `test_<dbname>` database,
+        # which requires CREATE privileges beyond `david.*`.
+        run: mysql -h 127.0.0.1 -uroot -proot -e "GRANT ALL PRIVILEGES ON *.* TO 'david'@'%'; FLUSH PRIVILEGES;"
+
+      - name: Run tests
+        run: python manage.py test
