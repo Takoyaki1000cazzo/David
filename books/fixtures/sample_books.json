@@ -4,7 +4,7 @@
   "pk": 1,
   "fields": {
     "title": "The Red Apple",
-    "cover_image": "",
+    "cover_image": "covers/cover.png",
     "age_min": 2,
     "age_max": 5,
     "description": "A simple picture book about a red apple.",
@@ -20,7 +20,7 @@
     "page_no": 1,
     "text_en": "This is a red apple.",
     "text_ja": "これは赤いりんごです。",
-    "image": "",
+    "image": "pages/page1.png",
     "audio_url": null,
     "created_at": "2026-09-07T00:00:01Z"
   }
@@ -33,7 +33,7 @@
     "page_no": 2,
     "text_en": "The apple is sweet.",
     "text_ja": "りんごは甘いです。",
-    "image": "",
+    "image": "pages/page2.png",
     "audio_url": null,
     "created_at": "2026-09-07T00:00:02Z"
   }
