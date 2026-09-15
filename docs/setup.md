@@ -134,3 +134,18 @@ PRを出す前に必ず実行し、結果をPR本文の「動作確認」に記�
 | `mysqlclient` のインストール失敗 | MySQL開発用ライブラリ不足。OS別ページのビルドツール導入を見直す |
 | `Pillow is not installed` | `pip install -r requirements.txt` を再実行 |
 | ポート3306が使用中 | 既存MySQLと競合。どちらかを止めるか、別ポートのMySQLを用意して `.env` の `MYSQL_PORT` を変える |
+
+## 10. 次へ：開発開始
+
+セットアップ完了後の毎日の始め方は以下です。
+
+```bash
+docker compose up -d
+source .venv/bin/activate
+python manage.py runserver
+```
+
+開発の進め方・PRの出し方は [PRを出す前の確認リスト](pr-checklist.md) を見てください。
+
+---
+検証：2026-09-15・Windows (Git Bash)＋MySQL 8.4で共通手順を検証（Docker手順は未検証）

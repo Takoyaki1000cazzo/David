@@ -42,13 +42,17 @@ sudo systemctl enable --now mysql
 
 その場合は [setup.md の「Dockerを使わない場合」](setup.md#dockerを使わない場合) の手順でDB・ユーザーを作成してください。
 
-## 4. 次へ
+## 4. 次へ：共通手順へ
 
-[docs/setup.md](setup.md) の「1. リポジトリを取得」に進んでください。
+[setup.md](setup.md) の「1. リポジトリを取得」から共通手順に進んでください。
 以降のコマンドはすべてUbuntu側で実行します。
+共通手順が終われば開発開始です。日々の開発の始め方は setup.md の末尾「10. 次へ：開発開始」を見てください。
 
 ## 注意点
 
 - ブラウザ確認はWindows側のブラウザで `http://localhost:8000` を開けます
 - リポジトリを `/mnt/c/` 配下（Windows側）に置くと激重になるので `~/David` 等に置くこと
 - `python` ではなく `python3` コマンドを使ってください
+
+---
+検証：2026-09-15作成・WSL2実機では未検証（要検証）
