@@ -46,7 +46,7 @@
 ## 6. 技術スタック
 - Backend: Django==5.2.17
 - DB: MySQL 8.4（docker: `david-mysql`）
-- Lib: mysqlclient==2.2.8, python-dotenv==1.2.3
+- Lib: mysqlclient==2.2.8, python-dotenv==1.2.3, Pillow==11.3.0
 - Infra(dev): Docker Compose
 
 ## 7. 開発手順（概要）
@@ -64,10 +64,10 @@ python manage.py runserver
 
 ## 8. ロードマップ案
 - [x] 初期セットアップ（#1 マージ済み）
-- [ ] `books` アプリ＋モデル＋admin登録
-- [ ] 一覧・詳細画面（テンプレートのみ）
-- [ ] Web Speech APIによる読み上げ
-- [ ] 画像アップロード・表紙表示
+- [x] `books` アプリ＋モデル＋admin登録
+- [x] 一覧・詳細画面（テンプレートのみ）
+- [x] Web Speech APIによる読み上げ
+- [x] 画像アップロード・表紙表示
 
 ## 9. 決定事項 / 要議論
 - [x] TTSは案Aで始めてよいか？ → 案A（Web Speech API）で確定
