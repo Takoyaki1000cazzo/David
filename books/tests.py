@@ -103,3 +103,31 @@ class BookDetailPageValidationTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['current_no'], 1)
         self.assertContains(response, 'Page One')
+
+
+class BookViewTests(TestCase):
+    """D4a: 一覧・詳細・年齢絞り込みの画面動作チェック"""
+
+    def test_book_list_returns_200(self):
+        """一覧ページ `/` は HTTP 200 を返す"""
+        Book.objects.create(title='List Check Book', age_min=3, age_max=6)
+        response = self.client.get(reverse('book-list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'List Check Book')
+
+    def test_book_detail_returns_200(self):
+        """詳細ページ `/books/<id>/` は HTTP 200 を返す"""
+        book = Book.objects.create(title='Detail Check Book', age_min=3, age_max=6)
+        Page.objects.create(book=book, page_no=1, text_en='Hello')
+        response = self.client.get(reverse('book-detail', args=[book.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Detail Check Book')
+
+    def test_book_list_age_filter(self):
+        """`/?age=4` は対象(3-6歳)のみ表示し対象外(1-2歳)を表示しない"""
+        Book.objects.create(title='Target Age Book', age_min=3, age_max=6)
+        Book.objects.create(title='Out Of Range Book', age_min=1, age_max=2)
+        response = self.client.get(reverse('book-list'), {'age': '4'})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Target Age Book')
+        self.assertNotContains(response, 'Out Of Range Book')
