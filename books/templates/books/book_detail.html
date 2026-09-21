@@ -105,6 +105,7 @@
     }
     .btn-speak { background: var(--red); color: #fff; }
     .btn-stop { background: var(--blue); color: #fff; }
+    .btn:disabled { opacity: 0.5; cursor: default; }
     .setting {
       font-size: 15px;
       border: 1px solid var(--line);
@@ -188,6 +189,10 @@
   const enText = document.getElementById('text-en');
   rateInput.addEventListener('input', () => { rateVal.textContent = rateInput.value; });
   showJaBox.addEventListener('change', () => { jaText.style.display = showJaBox.checked ? '' : 'none'; });
+  function setSpeaking(speaking) {
+    btn.disabled = speaking;
+    btn.textContent = speaking ? 'よみあげ中…' : '▶ よみあげる';
+  }
   function speak() {
     if (!('speechSynthesis' in window)) { alert('このブラウザは読み上げに対応していません'); return; }
     speechSynthesis.cancel();
@@ -198,12 +203,14 @@
     const voices = speechSynthesis.getVoices();
     const en = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en'));
     if (en) u.voice = en;
-    u.onend = () => { if (repeatBox.checked) speak(); };
+    u.onstart = () => setSpeaking(true);
+    u.onend = () => { if (repeatBox.checked) { speak(); return; } setSpeaking(false); };
+    u.onerror = () => setSpeaking(false);
     speechSynthesis.speak(u);
   }
   btn.addEventListener('click', speak);
   enText.addEventListener('click', speak);
-  stopBtn.addEventListener('click', () => speechSynthesis.cancel());
+  stopBtn.addEventListener('click', () => { speechSynthesis.cancel(); setSpeaking(false); });
   if (typeof speechSynthesis !== 'undefined') speechSynthesis.getVoices();
   </script>
   {% else %}
