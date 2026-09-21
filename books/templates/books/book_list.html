@@ -4,18 +4,92 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>David - えほんいちらん</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 12px 16px 32px;
+    background: #FFF8E7;
+    color: #4A2F14;
+    font-family: sans-serif;
+    line-height: 1.6;
+  }
+  .container { max-width: 960px; margin: 0 auto; }
+  h1 { font-size: 28px; margin: 12px 0; }
+  form.filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    background: #fff;
+    border: 2px solid #E6D2B4;
+    border-radius: 12px;
+    padding: 10px 12px;
+  }
+  form.filter input[type="number"] {
+    font-size: 16px;
+    min-height: 44px;
+    max-width: 90px;
+    padding: 6px 8px;
+  }
+  form.filter button {
+    font-size: 16px;
+    min-height: 44px;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 10px;
+    background: #FF8C00;
+    color: #fff;
+    cursor: pointer;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+  }
+  .card {
+    background: #fff;
+    border: 2px solid #E6D2B4;
+    border-radius: 16px;
+    padding: 12px;
+    margin-bottom: 0;
+  }
+  .card img {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 12px;
+  }
+  .card strong { font-size: 18px; }
+  .card a { color: #5A3C1E; }
+  /* D-10: タブレット幅 */
+  @media (max-width: 768px) {
+    h1 { font-size: 24px; }
+    .grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+  }
+  /* D-10: スマホ幅 (375px想定) */
+  @media (max-width: 600px) {
+    body { padding: 8px 12px 24px; }
+    h1 { font-size: 22px; }
+    .grid { grid-template-columns: 1fr; }
+    form.filter button { flex: 1; }
+  }
+</style>
 </head>
 <body>
+<div class="container">
 <h1>えほんをえらんでね</h1>
-<form method="get">
+<form method="get" class="filter">
 <label>ねんれい: <input type="number" name="age" value="{{ age }}" min="0" max="12"> さい</label>
 <button type="submit">しぼりこむ</button>
 {% if age %}<a href="{% url 'book-list' %}">クリア</a>{% endif %}
 </form>
-<hr>
+<div class="grid">
 {% for book in books %}
-<div style="margin-bottom: 24px;">
-{% if book.cover_image %}<img src="{{ book.cover_image.url }}" alt="{{ book.title }}" style="max-width: 200px;"><br>{% else %}<img src="/media/placeholders/no-image.png" alt="がぞうじゅんびちゅう" style="max-width: 200px;"><br>{% endif %}
+<div class="card">
+{% if book.cover_image %}<img src="{{ book.cover_image.url }}" alt="{{ book.title }}"><br>{% else %}<img src="/media/placeholders/no-image.png" alt="がぞうじゅんびちゅう"><br>{% endif %}
 <strong><a href="{% url 'book-detail' book.pk %}">{{ book.title }}</a></strong><br>
 たいしょうねんれい: {{ book.age_min }}〜{{ book.age_max }}さい<br>
 {{ book.description_ja|default:book.description|truncatewords:20 }}
@@ -23,7 +97,9 @@
 {% empty %}
 <p>えほんがありません。adminで登録してください。</p>
 {% endfor %}
+</div>
 <hr>
 <p><a href="/admin/">管理画面</a></p>
+</div>
 </body>
 </html>

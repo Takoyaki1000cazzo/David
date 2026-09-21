@@ -131,11 +131,27 @@
     }
     .prev { background: #fff; border: 3px solid #FF9646; color: #E46A1A; }
     .next { background: var(--accent); color: #fff; }
-    /* D-10用: 後で有効化。PCでは何もしない */
-    /* @media (max-width: 768px) {
-      body { overflow: auto; height: auto; }
-      main.d8-layout { flex-direction: column; overflow-y: auto; }
-    } */
+    /* D-10: タブレット・スマホ幅では縦積み＋スクロール許可 */
+    @media (max-width: 768px) {
+      body { height: auto; min-height: 100vh; overflow: auto; }
+      header { min-height: 56px; height: auto; padding: 8px 12px; gap: 8px; font-size: 14px; flex-wrap: wrap; }
+      main.d8-layout { flex-direction: column; gap: 12px; padding: 12px; overflow: visible; }
+      .img-card, .text-card { padding: 12px; }
+      .img-card img { max-width: 100%; height: auto; max-height: 60vh; }
+      .img-card .ph { min-height: 220px; }
+      .en { font-size: 22px; }
+      .ja { font-size: 16px; }
+      .row { flex-direction: column; }
+      .btn { min-height: 56px; font-size: 20px; width: 100%; }
+      .setting { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+      footer { height: auto; flex-direction: column; gap: 12px; padding: 0 12px 16px; }
+      footer a { font-size: 20px; min-height: 56px; }
+    }
+    /* D-10: スマホ幅 (375px想定) の微調整 */
+    @media (max-width: 480px) {
+      .en { font-size: 20px; padding: 10px 12px; }
+      footer a { font-size: 18px; }
+    }
   </style>
 </head>
 <body class="font">
