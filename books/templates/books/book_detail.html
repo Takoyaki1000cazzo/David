@@ -5,33 +5,38 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ book.title }} - David</title>
   <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@700&display=swap" rel="stylesheet">
+  <style>
+    .font {
+      font-family: 'Zen Maru Gothic';
+    }
+  </style>
 </head>
 <body>
-  <p style="font-family:'Zen Maru Gothic';"><a href="{% url 'book-list' %}">← いちらんにもどる</a></p>
-  <h1 style="font-family:'Zen Maru Gothic';">{{ book.title }}</h1>
-  <p style="font-family:'Zen Maru Gothic';">たいしょう: {{ book.age_min }}〜{{ book.age_max }}さい</p>
+  <p class="font"><a href="{% url 'book-list' %}">← いちらんにもどる</a></p>
+  <h1 class="font">{{ book.title }}</h1>
+  <p class="font">たいしょう: {{ book.age_min }}〜{{ book.age_max }}さい</p>
   {% if book.cover_image %}<img src="{{ book.cover_image.url }}" alt="{{ book.title }}" style="max-width: 240px;">{% endif %}
-  {% if book.description_ja %}<p style="font-family:'Zen Maru Gothic';">{{ book.description_ja }}</p>{% elif book.description %}<p>{{ book.description }}</p>{% endif %}
+  {% if book.description_ja %}<p class="font">{{ book.description_ja }}</p>{% elif book.description %}<p>{{ book.description }}</p>{% endif %}
 
   {% if page %}
   <hr>
-  <p style="font-family:'Zen Maru Gothic';">ページ {{ current_no }} / {{ total }}</p>
+  <p class="font">ページ {{ current_no }} / {{ total }}</p>
   {% if page.image %}<div><img src="{{ page.image.url }}" alt="p{{ current_no }}" style="max-width: 400px;"></div>{% endif %}
-  <p id="text-en" style="font-size: 1.4em;text-align: center;font-family:'Zen Maru Gothic';">{{ page.text_en }}</p>
-  <p id="text-ja" style="text-align: center;font-family:'Zen Maru Gothic';">{{ page.text_ja }}</p>
+  <p id="text-en" class="font" style="font-size: 1.4em;text-align: center;">{{ page.text_en }}</p>
+  <p id="text-ja" class="font" style="text-align: center;">{{ page.text_ja }}</p>
 
   <div>
-  <label style="font-family:'Zen Maru Gothic';">はやさ: <input type="range" id="rate" min="0.5" max="1.5" step="0.1" value="0.9"> <span id="rate-val">0.9</span></label>
-  <label style="font-family:'Zen Maru Gothic';"><input type="checkbox" id="repeat"> リピート</label>
-  <label style="font-family:'Zen Maru Gothic';"><input type="checkbox" id="show-ja" checked> にほんごをひょうじ</label>
+  <label class="font">はやさ: <input type="range" id="rate" min="0.5" max="1.5" step="0.1" value="0.9"> <span id="rate-val">0.9</span></label>
+  <label class="font"><input type="checkbox" id="repeat"> リピート</label>
+  <label class="font"><input type="checkbox" id="show-ja" checked> にほんごをひょうじ</label>
   </div>
   <div style="margin: 12px 0;">
-  <button id="speak-btn" style="background-color: rgb(255, 42, 0); border: none; border-radius:10px; font-size: 1.4em; font-family:'Zen Maru Gothic';">🔊 よみあげる</button>
-  <button id="stop-btn" style="background-color:rgb(80, 141, 217); border: none; border-radius:10px; font-size: 1.4em; font-family:'Zen Maru Gothic';">⏹ とめる</button>
+  <button id="speak-btn" class="font" style="background-color: rgb(255, 42, 0); border: none; border-radius:10px; font-size: 1.4em;">🔊 よみあげる</button>
+  <button id="stop-btn" class="font" style="background-color:rgb(80, 141, 217); border: none; border-radius:10px; font-size: 1.4em;">⏹ とめる</button>
   </div>
   <div>
-  {% if has_prev %}<a href="?p={{ prev_no }}" style="font-family:'Zen Maru Gothic';">← まえのページ</a>{% endif %}
-  {% if has_next %} <a href="?p={{ next_no }}" style="font-family:'Zen Maru Gothic';">つぎのページ →</a>{% endif %}
+  {% if has_prev %}<a href="?p={{ prev_no }}" class="font">← まえのページ</a>{% endif %}
+  {% if has_next %} <a href="?p={{ next_no }}" class="font">つぎのページ →</a>{% endif %}
   </div>
   <script>
   const btn = document.getElementById('speak-btn');
