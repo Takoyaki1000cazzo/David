@@ -174,7 +174,8 @@
       .ja { font-size: 14px; padding: 6px 10px; max-height: 20vh; overflow-y: auto; }
       .row { flex-direction: row; flex-shrink: 0; }
       .btn { min-height: 48px; font-size: 18px; width: auto; }
-      .setting { font-size: 12px; padding: 4px 8px; flex-shrink: 0; white-space: nowrap; overflow: hidden; }
+      .setting { display: flex; flex-wrap: wrap; gap: 2px 8px; align-items: center; font-size: 12px; padding: 4px 8px; flex-shrink: 0; }
+      .setting input[type="range"] { max-width: 90px; }
       footer { height: auto; flex-direction: row; gap: 12px; padding: 0 12px 8px; }
       footer a { font-size: 16px; min-height: 44px; }
     }
@@ -197,11 +198,11 @@
     </section>
     <section class="text-card">
       <div>
-        <small>ENGLISH (おおきく)</small>
+        <small>ENGLISH</small>
         <div id="text-en" class="en">{{ page.text_en }}</div>
       </div>
-      <div>
-        <small>にほんご (ちいさく)</small>
+      <div id="ja-block">
+        <small>にほんご</small>
         <div id="text-ja" class="ja">{{ page.text_ja }}</div>
       </div>
       <div class="row">
@@ -226,7 +227,7 @@
   const rateVal = document.getElementById('rate-val');
   const repeatBox = document.getElementById('repeat');
   const showJaBox = document.getElementById('show-ja');
-  const jaText = document.getElementById('text-ja');
+  const jaBlock = document.getElementById('ja-block');
   const enText = document.getElementById('text-en');
   const RATE_KEY = 'david-rate';
   try {
@@ -238,7 +239,7 @@
     rateVal.textContent = rateInput.value;
     try { localStorage.setItem(RATE_KEY, rateInput.value); } catch (e) {}
   });
-  showJaBox.addEventListener('change', () => { jaText.style.display = showJaBox.checked ? '' : 'none'; });
+  showJaBox.addEventListener('change', () => { jaBlock.style.display = showJaBox.checked ? '' : 'none'; });
   function setSpeaking(speaking) {
     btn.disabled = speaking;
     btn.textContent = speaking ? 'よみあげ中…' : '▶ よみあげる';
