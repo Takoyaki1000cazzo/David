@@ -8,7 +8,7 @@ def book_list(request):
     age = request.GET.get('age')
     if age and age.isdigit():
         age = int(age)
-        books = [b for b in books if b.age_min <= age <= b.age_max]
+        books = books.filter(age_min__lte=age, age_max__gte=age)
     return render(request, 'books/book_list.html', {'books': books, 'age': request.GET.get('age', '')})
 
 
