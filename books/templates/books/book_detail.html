@@ -187,7 +187,16 @@
   const showJaBox = document.getElementById('show-ja');
   const jaText = document.getElementById('text-ja');
   const enText = document.getElementById('text-en');
-  rateInput.addEventListener('input', () => { rateVal.textContent = rateInput.value; });
+  const RATE_KEY = 'david-rate';
+  try {
+    const saved = localStorage.getItem(RATE_KEY);
+    if (saved !== null) { rateInput.value = saved; }
+  } catch (e) {}
+  rateVal.textContent = rateInput.value;
+  rateInput.addEventListener('input', () => {
+    rateVal.textContent = rateInput.value;
+    try { localStorage.setItem(RATE_KEY, rateInput.value); } catch (e) {}
+  });
   showJaBox.addEventListener('change', () => { jaText.style.display = showJaBox.checked ? '' : 'none'; });
   function setSpeaking(speaking) {
     btn.disabled = speaking;
