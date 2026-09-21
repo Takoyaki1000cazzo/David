@@ -13,6 +13,8 @@
     color: #4A2F14;
     font-family: sans-serif;
     line-height: 1.6;
+    min-height: 100vh;
+    min-height: 100dvh;
   }
   .container { max-width: 960px; margin: 0 auto; }
   h1 { font-size: 28px; margin: 12px 0; }
@@ -56,24 +58,29 @@
     margin-bottom: 0;
   }
   .card img {
-    width: 100%;
+    width: auto;
     max-width: 100%;
+    max-height: 50vh;
+    max-height: 50dvh;
     height: auto;
     display: block;
+    margin: 0 auto;
     border-radius: 12px;
   }
   .card strong { font-size: 18px; }
   .card a { color: #5A3C1E; }
-  /* D-10: タブレット幅 */
-  @media (max-width: 768px) {
+  /* D-10: 縦向きのスマホ・タブレットは1作品1行。
+     作品が少なければスクロールなし、増えたら縦スクロールで見られる */
+  @media (orientation: portrait) and (max-width: 1100px) {
     h1 { font-size: 24px; }
-    .grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+    .grid { grid-template-columns: 1fr; gap: 12px; }
+    .card img { max-height: 38vh; max-height: 38dvh; }
   }
-  /* D-10: スマホ幅 (375px想定) */
+  /* D-10: スマホ幅 (375px想定) の微調整。
+     横画面・PCは auto-fill のまま画面幅で折り返し数が変わる */
   @media (max-width: 600px) {
     body { padding: 8px 12px 24px; }
     h1 { font-size: 22px; }
-    .grid { grid-template-columns: 1fr; }
     form.filter button { flex: 1; }
   }
 </style>
