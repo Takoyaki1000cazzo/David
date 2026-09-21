@@ -11,3 +11,5 @@ media/*
 !media/pages/page2.png
 !media/covers/
 !media/covers/cover.png
+!media/placeholders/
+!media/placeholders/no-image.png
