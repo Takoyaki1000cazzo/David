@@ -150,7 +150,7 @@
     <section class="img-card">
       <small>えほんのがぞう</small>
       <div class="ph">
-        {% if page.image %}<img src="{{ page.image.url }}" alt="p{{ current_no }}">{% else %}がぞうなし{% endif %}
+        {% if page.image %}<img src="{{ page.image.url }}" alt="p{{ current_no }}">{% else %}<img src="/media/placeholders/no-image.png" alt="がぞうじゅんびちゅう">{% endif %}
       </div>
       <small>ページ {{ current_no }} / {{ total }}</small>
     </section>

@@ -15,7 +15,7 @@
 <hr>
 {% for book in books %}
 <div style="margin-bottom: 24px;">
-{% if book.cover_image %}<img src="{{ book.cover_image.url }}" alt="{{ book.title }}" style="max-width: 200px;"><br>{% endif %}
+{% if book.cover_image %}<img src="{{ book.cover_image.url }}" alt="{{ book.title }}" style="max-width: 200px;"><br>{% else %}<img src="/media/placeholders/no-image.png" alt="がぞうじゅんびちゅう" style="max-width: 200px;"><br>{% endif %}
 <strong><a href="{% url 'book-detail' book.pk %}">{{ book.title }}</a></strong><br>
 たいしょうねんれい: {{ book.age_min }}〜{{ book.age_max }}さい<br>
 {{ book.description_ja|default:book.description|truncatewords:20 }}
