@@ -18,7 +18,9 @@
     min-height: 100dvh;
   }
   .container { max-width: 960px; margin: 0 auto; }
-  h1 { font-size: 28px; margin: 12px 0; }
+  .container > hr { margin: 10px 0; }
+  .container > p:last-child { margin: 8px 0 0; }
+  h1 { font-size: 28px; margin: 8px 0; }
   form.filter {
     display: flex;
     flex-wrap: wrap;
@@ -27,7 +29,7 @@
     background: #fff;
     border: 2px solid #E6D2B4;
     border-radius: 12px;
-    padding: 10px 12px;
+    padding: 8px 12px;
   }
   form.filter input[type="number"] {
     font-size: 16px;
@@ -49,20 +51,20 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 16px;
-    margin-top: 16px;
+    margin-top: 12px;
   }
   .card {
     background: #fff;
     border: 2px solid #E6D2B4;
     border-radius: 16px;
-    padding: 12px;
+    padding: 10px;
     margin-bottom: 0;
   }
   .card img {
     width: auto;
     max-width: 100%;
-    max-height: 50vh;
-    max-height: 50dvh;
+    max-height: 44vh;
+    max-height: 44dvh;
     height: auto;
     display: block;
     margin: 0 auto;
@@ -75,7 +77,7 @@
   @media (orientation: portrait) and (max-width: 1100px) {
     h1 { font-size: 24px; }
     .grid { grid-template-columns: 1fr; gap: 12px; }
-    .card img { max-height: 38vh; max-height: 38dvh; }
+    .card img { max-height: 32vh; max-height: 32dvh; }
   }
   /* D-10: スマホ幅 (375px想定) の微調整。
      横画面・PCは auto-fill のまま画面幅で折り返し数が変わる */
