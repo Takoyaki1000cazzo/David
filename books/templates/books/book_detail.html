@@ -230,6 +230,7 @@
   const jaBlock = document.getElementById('ja-block');
   const enText = document.getElementById('text-en');
   const RATE_KEY = 'david-rate';
+  const SHOW_JA_KEY = 'david-show-ja';
   try {
     const saved = localStorage.getItem(RATE_KEY);
     if (saved !== null) { rateInput.value = saved; }
@@ -239,7 +240,15 @@
     rateVal.textContent = rateInput.value;
     try { localStorage.setItem(RATE_KEY, rateInput.value); } catch (e) {}
   });
-  showJaBox.addEventListener('change', () => { jaBlock.style.display = showJaBox.checked ? '' : 'none'; });
+  try {
+    const savedShowJa = localStorage.getItem(SHOW_JA_KEY);
+    if (savedShowJa !== null) { showJaBox.checked = savedShowJa === '1'; }
+  } catch (e) {}
+  jaBlock.style.display = showJaBox.checked ? '' : 'none';
+  showJaBox.addEventListener('change', () => {
+    jaBlock.style.display = showJaBox.checked ? '' : 'none';
+    try { localStorage.setItem(SHOW_JA_KEY, showJaBox.checked ? '1' : '0'); } catch (e) {}
+  });
   function setSpeaking(speaking) {
     btn.disabled = speaking;
     btn.textContent = speaking ? 'よみあげ中…' : '▶ よみあげる';
