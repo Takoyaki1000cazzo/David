@@ -78,13 +78,17 @@
       flex-direction: column;
       gap: 12px;
       min-height: 0;
+      overflow: hidden;
     }
+    .text-card > div { min-height: 0; }
     .en {
       font-size: 28px;
       background: #FFFBF0;
       border-radius: 12px;
       padding: 12px 16px;
       cursor: pointer;
+      max-height: 34vh;
+      overflow-y: auto;
     }
     .ja {
       font-size: 18px;
@@ -92,6 +96,8 @@
       background: #f5f5f5;
       border-radius: 12px;
       padding: 10px 16px;
+      max-height: 26vh;
+      overflow-y: auto;
     }
     .row { display: flex; gap: 12px; }
     .btn {
@@ -139,11 +145,12 @@
       header { min-height: 0; height: 52px; padding: 6px 12px; gap: 8px; font-size: 14px; flex-wrap: nowrap; overflow: hidden; }
       header strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       main.d8-layout { flex-direction: column; gap: 8px; padding: 8px 12px; overflow: hidden; }
-      .img-card, .text-card { padding: 8px 12px; min-height: 0; }
+      .img-card, .text-card { padding: 8px 12px; min-height: 0; overflow: hidden; }
       .img-card { flex: 1 1 auto; }
       .img-card .ph { min-height: 0; }
       .img-card img { max-width: 100%; max-height: 100%; height: auto; }
-      .text-card { flex: 0 0 auto; gap: 8px; }
+      .text-card { flex: 0 1 auto; gap: 8px; }
+      .text-card > div { min-height: 0; }
       .en { font-size: 20px; padding: 8px 12px; max-height: 26vh; max-height: 26dvh; overflow-y: auto; }
       .ja { font-size: 15px; padding: 6px 12px; max-height: 18vh; max-height: 18dvh; overflow-y: auto; }
       .row { flex-direction: row; flex-shrink: 0; }
@@ -169,8 +176,9 @@
       .img-card { flex: 1; }
       .img-card .ph { min-height: 0; }
       .img-card img { max-width: 100%; max-height: 100%; }
-      .text-card { flex: 1; gap: 8px; }
-      .en { font-size: 16px; padding: 8px 10px; }
+      .text-card { flex: 1; gap: 8px; overflow: hidden; }
+      .text-card > div { min-height: 0; }
+      .en { font-size: 16px; padding: 8px 10px; max-height: 18vh; max-height: 18dvh; overflow-y: auto; }
       .ja { font-size: 14px; padding: 6px 10px; max-height: 20vh; overflow-y: auto; }
       .row { flex-direction: row; flex-shrink: 0; }
       .btn { min-height: 48px; font-size: 18px; width: auto; }
