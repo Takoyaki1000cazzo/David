@@ -131,8 +131,9 @@
     }
     .prev { background: #fff; border: 3px solid #FF9646; color: #E46A1A; }
     .next { background: var(--accent); color: #fff; }
-    /* D-10: タブレット・スマホ幅では縦積み＋スクロール許可 */
-    @media (max-width: 768px) {
+    /* D-10案A: タブレット縦・スマホ幅では縦積み＋スクロール許可
+       (iPad Air縦 820pxを含むよう900px以下で適用) */
+    @media (max-width: 900px) {
       body { height: auto; min-height: 100vh; overflow: auto; }
       header { min-height: 56px; height: auto; padding: 8px 12px; gap: 8px; font-size: 14px; flex-wrap: wrap; }
       main.d8-layout { flex-direction: column; gap: 12px; padding: 12px; overflow: visible; }
@@ -151,6 +152,25 @@
     @media (max-width: 480px) {
       .en { font-size: 20px; padding: 10px 12px; }
       footer a { font-size: 18px; }
+    }
+    /* D-10案B: スマホ横向き (高さが低い横長画面) は2カラムのまま
+       100vhに収め、縦スクロールなしでよみあげる/とめるを押せる配置 */
+    @media (max-height: 500px) and (orientation: landscape) {
+      body { height: 100vh; overflow: hidden; }
+      header { min-height: 0; height: 40px; padding: 4px 12px; gap: 8px; font-size: 13px; flex-wrap: nowrap; }
+      main.d8-layout { flex-direction: row; gap: 12px; padding: 8px 12px; overflow: hidden; }
+      .img-card, .text-card { padding: 8px 10px; min-height: 0; overflow: hidden; }
+      .img-card { flex: 1; }
+      .img-card .ph { min-height: 0; }
+      .img-card img { max-width: 100%; max-height: 100%; }
+      .text-card { flex: 1; gap: 8px; }
+      .en { font-size: 16px; padding: 8px 10px; }
+      .ja { font-size: 14px; padding: 6px 10px; max-height: 20vh; overflow-y: auto; }
+      .row { flex-direction: row; flex-shrink: 0; }
+      .btn { min-height: 48px; font-size: 18px; width: auto; }
+      .setting { font-size: 12px; padding: 4px 8px; flex-shrink: 0; white-space: nowrap; overflow: hidden; }
+      footer { height: auto; flex-direction: row; gap: 12px; padding: 0 12px 8px; }
+      footer a { font-size: 16px; min-height: 44px; }
     }
   </style>
 </head>
