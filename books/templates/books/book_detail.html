@@ -78,13 +78,17 @@
       flex-direction: column;
       gap: 12px;
       min-height: 0;
+      overflow: hidden;
     }
+    .text-card > div { min-height: 0; }
     .en {
       font-size: 28px;
       background: #FFFBF0;
       border-radius: 12px;
       padding: 12px 16px;
       cursor: pointer;
+      max-height: 34vh;
+      overflow-y: auto;
     }
     .ja {
       font-size: 18px;
@@ -92,6 +96,8 @@
       background: #f5f5f5;
       border-radius: 12px;
       padding: 10px 16px;
+      max-height: 26vh;
+      overflow-y: auto;
     }
     .row { display: flex; gap: 12px; }
     .btn {
@@ -131,11 +137,56 @@
     }
     .prev { background: #fff; border: 3px solid #FF9646; color: #E46A1A; }
     .next { background: var(--accent); color: #fff; }
-    /* D-10用: 後で有効化。PCでは何もしない */
-    /* @media (max-width: 768px) {
-      body { overflow: auto; height: auto; }
-      main.d8-layout { flex-direction: column; overflow-y: auto; }
-    } */
+    /* D-10: 縦向きのスマホ・タブレット (iPad Pro縦1024px・Surface Pro 7縦912pxを含む) は
+       縦積みのまま100vh(dvh)に収め、ページ全体の縦スクロールなしで操作できる配置。
+       画像エリアが余白を吸収して伸縮し、文章・ボタン・フッターは固定表示 */
+    @media (orientation: portrait) and (max-width: 1100px) {
+      body { height: 100vh; height: 100dvh; overflow: hidden; }
+      header { min-height: 0; height: 52px; padding: 6px 12px; gap: 8px; font-size: 14px; flex-wrap: nowrap; overflow: hidden; }
+      header strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      main.d8-layout { flex-direction: column; gap: 8px; padding: 8px 12px; overflow: hidden; }
+      .img-card, .text-card { padding: 8px 12px; min-height: 0; overflow: hidden; }
+      .img-card { flex: 1 1 auto; }
+      .img-card .ph { min-height: 0; }
+      .img-card img { max-width: 100%; max-height: 100%; height: auto; }
+      .text-card { flex: 0 1 auto; gap: 8px; }
+      .text-card > div { min-height: 0; }
+      .en { font-size: 20px; padding: 8px 12px; max-height: 26vh; max-height: 26dvh; overflow-y: auto; }
+      .ja { font-size: 15px; padding: 6px 12px; max-height: 18vh; max-height: 18dvh; overflow-y: auto; }
+      .row { flex-direction: row; flex-shrink: 0; }
+      .btn { min-height: 52px; font-size: 18px; width: auto; }
+      .setting { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; font-size: 13px; padding: 4px 8px; flex-shrink: 0; }
+      footer { height: auto; flex-direction: row; gap: 12px; padding: 0 12px 8px; flex-shrink: 0; }
+      footer a { font-size: 18px; min-height: 52px; }
+    }
+    /* D-10: 背の低い縦画面 (旧機種など) の微調整。文字・ボタンを少し縮める */
+    @media (orientation: portrait) and (max-width: 1100px) and (max-height: 740px) {
+      header { height: 44px; font-size: 13px; }
+      .en { font-size: 18px; }
+      .btn { min-height: 48px; font-size: 17px; }
+      footer a { min-height: 48px; font-size: 16px; }
+    }
+    /* D-10案B: 横向きの小型画面 (スマホ横・Surface Duo横720x540など) は2カラムのまま
+       100vhに収め、縦スクロールなしでよみあげる/とめるを押せる配置 */
+    @media (orientation: landscape) and (max-width: 1024px) and (max-height: 600px) {
+      body { height: 100vh; height: 100dvh; overflow: hidden; }
+      header { min-height: 0; height: 40px; padding: 4px 12px; gap: 8px; font-size: 13px; flex-wrap: nowrap; }
+      main.d8-layout { flex-direction: row; gap: 12px; padding: 8px 12px; overflow: hidden; }
+      .img-card, .text-card { padding: 8px 10px; min-height: 0; overflow: hidden; }
+      .img-card { flex: 1; }
+      .img-card .ph { min-height: 0; }
+      .img-card img { max-width: 100%; max-height: 100%; }
+      .text-card { flex: 1; gap: 8px; overflow: hidden; }
+      .text-card > div { min-height: 0; }
+      .en { font-size: 16px; padding: 8px 10px; max-height: 18vh; max-height: 18dvh; overflow-y: auto; }
+      .ja { font-size: 14px; padding: 6px 10px; max-height: 20vh; overflow-y: auto; }
+      .row { flex-direction: row; flex-shrink: 0; }
+      .btn { min-height: 48px; font-size: 18px; width: auto; }
+      .setting { display: flex; flex-wrap: wrap; gap: 2px 8px; align-items: center; font-size: 12px; padding: 4px 8px; flex-shrink: 0; }
+      .setting input[type="range"] { max-width: 90px; }
+      footer { height: auto; flex-direction: row; gap: 12px; padding: 0 12px 8px; }
+      footer a { font-size: 16px; min-height: 44px; }
+    }
   </style>
 </head>
 <body class="font">
@@ -148,7 +199,6 @@
   {% if page %}
   <main class="d8-layout">
     <section class="img-card">
-      <small>えほんのがぞう</small>
       <div class="ph">
         {% if page.image %}<img src="{{ page.image.url }}" alt="p{{ current_no }}">{% else %}<img src="/media/placeholders/no-image.png" alt="がぞうじゅんびちゅう">{% endif %}
       </div>
@@ -156,11 +206,11 @@
     </section>
     <section class="text-card">
       <div>
-        <small>ENGLISH (おおきく)</small>
+        <small>ENGLISH</small>
         <div id="text-en" class="en">{{ page.text_en }}</div>
       </div>
-      <div>
-        <small>にほんご (ちいさく)</small>
+      <div id="ja-block">
+        <small>にほんご</small>
         <div id="text-ja" class="ja">{{ page.text_ja }}</div>
       </div>
       <div class="row">
@@ -185,9 +235,10 @@
   const rateVal = document.getElementById('rate-val');
   const repeatBox = document.getElementById('repeat');
   const showJaBox = document.getElementById('show-ja');
-  const jaText = document.getElementById('text-ja');
+  const jaBlock = document.getElementById('ja-block');
   const enText = document.getElementById('text-en');
   const RATE_KEY = 'david-rate';
+  const SHOW_JA_KEY = 'david-show-ja';
   try {
     const saved = localStorage.getItem(RATE_KEY);
     if (saved !== null) { rateInput.value = saved; }
@@ -197,7 +248,15 @@
     rateVal.textContent = rateInput.value;
     try { localStorage.setItem(RATE_KEY, rateInput.value); } catch (e) {}
   });
-  showJaBox.addEventListener('change', () => { jaText.style.display = showJaBox.checked ? '' : 'none'; });
+  try {
+    const savedShowJa = localStorage.getItem(SHOW_JA_KEY);
+    if (savedShowJa !== null) { showJaBox.checked = savedShowJa === '1'; }
+  } catch (e) {}
+  jaBlock.style.display = showJaBox.checked ? '' : 'none';
+  showJaBox.addEventListener('change', () => {
+    jaBlock.style.display = showJaBox.checked ? '' : 'none';
+    try { localStorage.setItem(SHOW_JA_KEY, showJaBox.checked ? '1' : '0'); } catch (e) {}
+  });
   function setSpeaking(speaking) {
     btn.disabled = speaking;
     btn.textContent = speaking ? 'よみあげ中…' : '▶ よみあげる';
