@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Book, Page
+from .models import Book, Favorite, Page
 
 
 class PageInline(admin.TabularInline):
@@ -20,4 +20,10 @@ class BookAdmin(admin.ModelAdmin):
 @admin.register(Page)
 class PageAdmin(admin.ModelAdmin):
     list_display = ('book', 'page_no', 'created_at')
+    list_filter = ('book',)
+
+
+@admin.register(Favorite)
+class FavoriteAdmin(admin.ModelAdmin):
+    list_display = ('user', 'book', 'created_at')
     list_filter = ('book',)

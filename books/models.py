@@ -62,3 +62,17 @@ class ReadingProgress(models.Model):
 
     def __str__(self):
         return f'{self.user} - {self.book.title} p.{self.last_page_no}'
+
+
+class Favorite(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='favorite_books')
+    book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='favorited_by')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'book'], name='unique_user_book_favorite'),
+        ]
+
+    def __str__(self):
+        return f'{self.user} ♥ {self.book.title}'
