@@ -1,41 +1,197 @@
 [
-{
-  "model": "books.book",
-  "pk": 1,
-  "fields": {
-    "title": "The Red Apple",
-    "cover_image": "covers/cover.png",
-    "age_min": 2,
-    "age_max": 5,
-    "description": "A simple picture book about a red apple.",
-    "description_ja": "赤いりんごについてのシンプルな絵本。",
-    "created_at": "2026-09-07T00:00:00Z"
+  {
+    "model": "books.book",
+    "pk": 1,
+    "fields": {
+      "title": "I Can Climb!",
+      "cover_image": null,
+      "age_min": 2,
+      "age_max": 5,
+      "description": "A simple repetition story about climbing up and down. Great for action words and reading aloud together.",
+      "description_ja": "のぼる／おりるの繰り返しで、動作語の学習にぴったりの絵本です。",
+      "created_at": "2026-09-21T00:00:00Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 1,
+    "fields": {
+      "book": 1,
+      "page_no": 1,
+      "text_en": "I can climb up.",
+      "text_ja": "のぼれます。",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:00:01Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 2,
+    "fields": {
+      "book": 1,
+      "page_no": 2,
+      "text_en": "I can climb down.",
+      "text_ja": "おりられます。",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:00:02Z"
+    }
+  },
+  {
+    "model": "books.book",
+    "pk": 2,
+    "fields": {
+      "title": "My Friends",
+      "cover_image": null,
+      "age_min": 2,
+      "age_max": 5,
+      "description": "A friendly introduction story with short self-introduction lines that children can imitate.",
+      "description_ja": "短い自己紹介の連続で、子どもが言い真似しやすい絵本です。",
+      "created_at": "2026-09-21T00:00:10Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 3,
+    "fields": {
+      "book": 2,
+      "page_no": 1,
+      "text_en": "I am Sam.",
+      "text_ja": "ぼくはサムです。",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:00:11Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 4,
+    "fields": {
+      "book": 2,
+      "page_no": 2,
+      "text_en": "My friend is here.",
+      "text_ja": "ともだちがいます。",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:00:12Z"
+    }
+  },
+  {
+    "model": "books.book",
+    "pk": 3,
+    "fields": {
+      "title": "Did You Hear?",
+      "cover_image": null,
+      "age_min": 2,
+      "age_max": 5,
+      "description": "A sound-based story where children can copy animal noises and simple sounds.",
+      "description_ja": "動物の鳴き声や音をまねして遊べる、音の絵本です。",
+      "created_at": "2026-09-21T00:00:20Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 5,
+    "fields": {
+      "book": 3,
+      "page_no": 1,
+      "text_en": "Did you hear the bird?",
+      "text_ja": "とりのねをききましたか？",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:00:21Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 6,
+    "fields": {
+      "book": 3,
+      "page_no": 2,
+      "text_en": "Tweet! Tweet!",
+      "text_ja": "ちゅんちゅん！",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:00:22Z"
+    }
+  },
+  {
+    "model": "books.book",
+    "pk": 4,
+    "fields": {
+      "title": "Smile Please!",
+      "cover_image": null,
+      "age_min": 2,
+      "age_max": 5,
+      "description": "A cheerful picture book themed around smiling, kindness, and face expressions.",
+      "description_ja": "えがおとやさしい気持ちを育てる、表情遊びに使いやすい絵本です。",
+      "created_at": "2026-09-21T00:00:30Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 7,
+    "fields": {
+      "book": 4,
+      "page_no": 1,
+      "text_en": "Smile, smile, smile!",
+      "text_ja": "えがお、えがお、えがお！",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:00:31Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 8,
+    "fields": {
+      "book": 4,
+      "page_no": 2,
+      "text_en": "We smile together.",
+      "text_ja": "いっしょにえがおです。",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:00:32Z"
+    }
+  },
+  {
+    "model": "books.book",
+    "pk": 5,
+    "fields": {
+      "title": "The Moon and The Cap",
+      "cover_image": null,
+      "age_min": 2,
+      "age_max": 5,
+      "description": "A gentle story about a cap and the moon, using a small and easy vocabulary set.",
+      "description_ja": "帽子と月が登場する、語彙が少なくやさしいお話です。",
+      "created_at": "2026-09-21T00:00:40Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 9,
+    "fields": {
+      "book": 5,
+      "page_no": 1,
+      "text_en": "The cap is on the chair.",
+      "text_ja": "ぼうしがいすのうえにあります。",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:00:41Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 10,
+    "fields": {
+      "book": 5,
+      "page_no": 2,
+      "text_en": "The moon shines above.",
+      "text_ja": "つきがうえでかがやいています。",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:00:42Z"
+    }
   }
-},
-{
-  "model": "books.page",
-  "pk": 1,
-  "fields": {
-    "book": 1,
-    "page_no": 1,
-    "text_en": "This is a red apple.",
-    "text_ja": "これは赤いりんごです。",
-    "image": "pages/page1.png",
-    "audio_url": null,
-    "created_at": "2026-09-07T00:00:01Z"
-  }
-},
-{
-  "model": "books.page",
-  "pk": 2,
-  "fields": {
-    "book": 1,
-    "page_no": 2,
-    "text_en": "The apple is sweet.",
-    "text_ja": "りんごは甘いです。",
-    "image": "pages/page2.png",
-    "audio_url": null,
-    "created_at": "2026-09-07T00:00:02Z"
-  }
-}
 ]

@@ -1,9 +1,10 @@
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError
 from django.test import TestCase
 from django.urls import reverse
 
-from .models import Book, Page
+from .models import Book, Favorite, Page, ReadingProgress
 
 
 class BookModelTests(TestCase):
@@ -131,3 +132,72 @@ class BookViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Target Age Book')
         self.assertNotContains(response, 'Out Of Range Book')
+
+
+class ReadingProgressModelTests(TestCase):
+    """「続きから読む」用: 1ユーザー1絵本1レコードで最終ページを保持する"""
+
+    def setUp(self):
+        User = get_user_model()
+        self.user = User.objects.create_user(username='reader1', password='pass')
+        self.book = Book.objects.create(title='Test', age_min=2, age_max=5)
+
+    def test_create_progress(self):
+        p = ReadingProgress.objects.create(user=self.user, book=self.book, last_page_no=3)
+        self.assertEqual(p.last_page_no, 3)
+
+    def test_duplicate_user_book_raises_integrity_error(self):
+        ReadingProgress.objects.create(user=self.user, book=self.book, last_page_no=1)
+        with self.assertRaises(IntegrityError):
+            ReadingProgress.objects.create(user=self.user, book=self.book, last_page_no=2)
+
+    def test_update_or_create_does_not_duplicate(self):
+        ReadingProgress.objects.update_or_create(
+            user=self.user, book=self.book, defaults={'last_page_no': 2})
+        ReadingProgress.objects.update_or_create(
+            user=self.user, book=self.book, defaults={'last_page_no': 4})
+        self.assertEqual(ReadingProgress.objects.count(), 1)
+        self.assertEqual(
+            ReadingProgress.objects.get(user=self.user, book=self.book).last_page_no, 4)
+
+    def test_different_user_or_book_passes(self):
+        User = get_user_model()
+        other = User.objects.create_user(username='reader2', password='pass')
+        other_book = Book.objects.create(title='Other', age_min=1, age_max=3)
+        ReadingProgress.objects.create(user=self.user, book=self.book, last_page_no=1)
+        ReadingProgress.objects.create(user=other, book=self.book, last_page_no=1)
+        ReadingProgress.objects.create(user=self.user, book=other_book, last_page_no=1)
+        self.assertEqual(ReadingProgress.objects.count(), 3)
+
+
+class FavoriteModelTests(TestCase):
+    """お気に入り: 1ユーザー1絵本1レコードで重複登録を防ぐ"""
+
+    def setUp(self):
+        User = get_user_model()
+        self.user = User.objects.create_user(username='fav1', password='pass')
+        self.book = Book.objects.create(title='Test', age_min=2, age_max=5)
+
+    def test_create_favorite(self):
+        f = Favorite.objects.create(user=self.user, book=self.book)
+        self.assertEqual(Favorite.objects.count(), 1)
+        self.assertEqual(str(f), f'{self.user} ♥ {self.book.title}')
+
+    def test_duplicate_user_book_raises_integrity_error(self):
+        Favorite.objects.create(user=self.user, book=self.book)
+        with self.assertRaises(IntegrityError):
+            Favorite.objects.create(user=self.user, book=self.book)
+
+    def test_get_or_create_does_not_duplicate(self):
+        Favorite.objects.get_or_create(user=self.user, book=self.book)
+        Favorite.objects.get_or_create(user=self.user, book=self.book)
+        self.assertEqual(Favorite.objects.count(), 1)
+
+    def test_different_user_or_book_passes(self):
+        User = get_user_model()
+        other = User.objects.create_user(username='fav2', password='pass')
+        other_book = Book.objects.create(title='Other', age_min=1, age_max=3)
+        Favorite.objects.create(user=self.user, book=self.book)
+        Favorite.objects.create(user=other, book=self.book)
+        Favorite.objects.create(user=self.user, book=other_book)
+        self.assertEqual(Favorite.objects.count(), 3)
