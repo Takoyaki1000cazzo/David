@@ -213,3 +213,89 @@ class FavoriteModelTests(TestCase):
         Favorite.objects.create(user=other, book=self.book)
         Favorite.objects.create(user=self.user, book=other_book)
         self.assertEqual(Favorite.objects.count(), 3)
+
+
+class FavoriteViewTests(TestCase):
+    """お気に入り登録・解除・一覧取得とアクセス制限の動作チェック"""
+
+    def setUp(self):
+        User = get_user_model()
+        self.user = User.objects.create_user(username='favuser', password='testpass123')
+        self.other = User.objects.create_user(username='favother', password='testpass123')
+        self.book = Book.objects.create(title='Fav Book', age_min=2, age_max=5)
+        self.other_book = Book.objects.create(title='Other Fav Book', age_min=1, age_max=3)
+
+    def test_favorite_add_requires_login(self):
+        """未ログインの登録POSTはログイン画面へリダイレクトする"""
+        url = reverse('favorite-add', args=[self.book.pk])
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/accounts/login/', response.url)
+        self.assertEqual(Favorite.objects.count(), 0)
+
+    def test_favorite_remove_requires_login(self):
+        url = reverse('favorite-remove', args=[self.book.pk])
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/accounts/login/', response.url)
+
+    def test_favorite_list_requires_login(self):
+        response = self.client.get(reverse('favorite-list'))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/accounts/login/', response.url)
+
+    def test_favorite_toggle_requires_login(self):
+        url = reverse('favorite-toggle', args=[self.book.pk])
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/accounts/login/', response.url)
+
+    def test_favorite_add_creates_favorite(self):
+        """ログイン時はお気に入り登録できる"""
+        self.client.login(username='favuser', password='testpass123')
+        response = self.client.post(reverse('favorite-add', args=[self.book.pk]))
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(Favorite.objects.filter(user=self.user, book=self.book).exists())
+
+    def test_favorite_add_is_idempotent(self):
+        """重複登録しても1レコードのまま（get_or_create + UniqueConstraint）"""
+        self.client.login(username='favuser', password='testpass123')
+        url = reverse('favorite-add', args=[self.book.pk])
+        self.client.post(url)
+        self.client.post(url)
+        self.assertEqual(Favorite.objects.filter(user=self.user, book=self.book).count(), 1)
+
+    def test_favorite_remove_deletes_favorite(self):
+        """ログイン時はお気に入り解除できる"""
+        Favorite.objects.create(user=self.user, book=self.book)
+        self.client.login(username='favuser', password='testpass123')
+        response = self.client.post(reverse('favorite-remove', args=[self.book.pk]))
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Favorite.objects.filter(user=self.user, book=self.book).exists())
+
+    def test_favorite_remove_via_delete(self):
+        """DELETEでも解除できる"""
+        Favorite.objects.create(user=self.user, book=self.book)
+        self.client.login(username='favuser', password='testpass123')
+        response = self.client.delete(reverse('favorite-remove', args=[self.book.pk]))
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Favorite.objects.filter(user=self.user, book=self.book).exists())
+
+    def test_favorite_toggle_add_and_remove(self):
+        """トグルは登録→解除を交互に行う"""
+        self.client.login(username='favuser', password='testpass123')
+        url = reverse('favorite-toggle', args=[self.book.pk])
+        self.client.post(url)
+        self.assertEqual(Favorite.objects.count(), 1)
+        self.client.post(url)
+        self.assertEqual(Favorite.objects.count(), 0)
+
+    def test_favorite_list_shows_only_own_favorites(self):
+        """一覧はログインユーザー自身の分だけ表示する"""
+        Favorite.objects.create(user=self.user, book=self.book)
+        Favorite.objects.create(user=self.other, book=self.other_book)
+        self.client.login(username='favuser', password='testpass123')
+        response = self.client.get(reverse('favorite-list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Fav Book')
+        self.assertNotContains(response, 'Other Fav Book')

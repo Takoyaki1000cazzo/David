@@ -1,6 +1,8 @@
-from django.shortcuts import get_object_or_404, render
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST, require_http_methods
 
-from .models import Book
+from .models import Book, Favorite
 
 
 def book_list(request):
@@ -33,3 +35,42 @@ def book_detail(request, pk):
         'next_no': current_no + 1,
     }
     return render(request, 'books/book_detail.html', context)
+
+
+def _safe_redirect(request, default_name, **kwargs):
+    next_url = request.POST.get('next') or request.GET.get('next')
+    if next_url and next_url.startswith('/'):
+        return redirect(next_url)
+    return redirect(default_name, **kwargs)
+
+
+@login_required
+def favorite_list(request):
+    favorites = Favorite.objects.filter(user=request.user).select_related('book').order_by('-created_at')
+    return render(request, 'books/favorite_list.html', {'favorites': favorites})
+
+
+@login_required
+@require_POST
+def favorite_add(request, pk):
+    book = get_object_or_404(Book, pk=pk)
+    Favorite.objects.get_or_create(user=request.user, book=book)
+    return _safe_redirect(request, 'book-detail', pk=book.pk)
+
+
+@login_required
+@require_http_methods(['POST', 'DELETE'])
+def favorite_remove(request, pk):
+    book = get_object_or_404(Book, pk=pk)
+    Favorite.objects.filter(user=request.user, book=book).delete()
+    return _safe_redirect(request, 'favorite-list')
+
+
+@login_required
+@require_POST
+def favorite_toggle(request, pk):
+    book = get_object_or_404(Book, pk=pk)
+    favorite, created = Favorite.objects.get_or_create(user=request.user, book=book)
+    if not created:
+        favorite.delete()
+    return _safe_redirect(request, 'book-detail', pk=book.pk)
