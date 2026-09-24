@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import IntegrityError
 from django.test import TestCase
 from django.urls import reverse
@@ -32,6 +33,56 @@ class BookModelTests(TestCase):
             status=Book.STATUS_PUBLISHED)
         book.full_clean()
         self.assertEqual(book.status, Book.STATUS_PUBLISHED)
+
+
+class BookValidationTests(TestCase):
+    """#41: 年齢の範囲と画像バリデーション"""
+
+    def test_age_over_12_raises_validation_error(self):
+        book = Book(title='Test', age_min=2, age_max=13)
+        with self.assertRaises(ValidationError):
+            book.full_clean()
+
+    def test_age_min_over_12_raises_validation_error(self):
+        book = Book(title='Test', age_min=13, age_max=13)
+        with self.assertRaises(ValidationError):
+            book.full_clean()
+
+    def test_invalid_image_extension_raises_validation_error(self):
+        book = Book(title='Test', age_min=2, age_max=5)
+        book.cover_image = SimpleUploadedFile('cover.gif', b'GIF89a', content_type='image/gif')
+        with self.assertRaises(ValidationError):
+            book.full_clean()
+
+    def test_oversized_image_raises_validation_error(self):
+        book = Book(title='Test', age_min=2, age_max=5)
+        big = b'\x89PNG\r\n' + b'0' * (5 * 1024 * 1024 + 1)
+        book.cover_image = SimpleUploadedFile('cover.png', big, content_type='image/png')
+        with self.assertRaises(ValidationError):
+            book.full_clean()
+
+    def test_valid_image_passes(self):
+        book = Book(title='Test', age_min=2, age_max=5)
+        book.cover_image = SimpleUploadedFile('cover.png', b'\x89PNG\r\n', content_type='image/png')
+        book.full_clean()
+
+
+class PageValidationTests(TestCase):
+    """#41: 英文必須とページ画像バリデーション"""
+
+    def setUp(self):
+        self.book = Book.objects.create(title='Test', age_min=2, age_max=5)
+
+    def test_empty_text_en_raises_validation_error(self):
+        page = Page(book=self.book, page_no=1, text_en='   ')
+        with self.assertRaises(ValidationError):
+            page.full_clean()
+
+    def test_invalid_image_extension_raises_validation_error(self):
+        page = Page(book=self.book, page_no=1, text_en='Hello')
+        page.image = SimpleUploadedFile('page.txt', b'hello', content_type='text/plain')
+        with self.assertRaises(ValidationError):
+            page.full_clean()
 
 
 class PageModelTests(TestCase):
