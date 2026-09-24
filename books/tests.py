@@ -213,3 +213,90 @@ class FavoriteModelTests(TestCase):
         Favorite.objects.create(user=other, book=self.book)
         Favorite.objects.create(user=self.user, book=other_book)
         self.assertEqual(Favorite.objects.count(), 3)
+
+
+class ReadingProgressViewTests(TestCase):
+    """「続きから読む」: 保存・取得とアクセス制限の動作チェック"""
+
+    def setUp(self):
+        User = get_user_model()
+        self.user = User.objects.create_user(username='progress1', password='testpass123')
+        self.other = User.objects.create_user(username='progress2', password='testpass123')
+        self.book = Book.objects.create(title='Progress Book', age_min=2, age_max=5)
+        Page.objects.create(book=self.book, page_no=1, text_en='Page One')
+        Page.objects.create(book=self.book, page_no=2, text_en='Page Two')
+        Page.objects.create(book=self.book, page_no=3, text_en='Page Three')
+
+    def test_progress_update_requires_login(self):
+        """未ログインの進捗保存POSTはログイン画面へリダイレクトする"""
+        url = reverse('progress-update', args=[self.book.pk])
+        response = self.client.post(url, {'last_page_no': 2})
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/accounts/login/', response.url)
+        self.assertEqual(ReadingProgress.objects.count(), 0)
+
+    def test_progress_detail_requires_login(self):
+        """未ログインの進捗取得GETはログイン画面へリダイレクトする"""
+        response = self.client.get(reverse('progress-detail', args=[self.book.pk]))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/accounts/login/', response.url)
+
+    def test_progress_update_creates_record(self):
+        """ログイン時は進捗が保存される"""
+        self.client.login(username='progress1', password='testpass123')
+        response = self.client.post(reverse('progress-update', args=[self.book.pk]), {'last_page_no': 2})
+        self.assertEqual(response.status_code, 302)
+        progress = ReadingProgress.objects.get(user=self.user, book=self.book)
+        self.assertEqual(progress.last_page_no, 2)
+
+    def test_progress_update_does_not_duplicate(self):
+        """update_or_createにより1ユーザー1絵本1レコードを保つ"""
+        self.client.login(username='progress1', password='testpass123')
+        url = reverse('progress-update', args=[self.book.pk])
+        self.client.post(url, {'last_page_no': 1})
+        self.client.post(url, {'last_page_no': 3})
+        self.assertEqual(ReadingProgress.objects.filter(user=self.user, book=self.book).count(), 1)
+        self.assertEqual(ReadingProgress.objects.get(user=self.user, book=self.book).last_page_no, 3)
+
+    def test_progress_update_invalid_page_falls_back_to_first(self):
+        """不正値は1ページ目として保存される"""
+        self.client.login(username='progress1', password='testpass123')
+        self.client.post(reverse('progress-update', args=[self.book.pk]), {'last_page_no': 'abc'})
+        self.assertEqual(ReadingProgress.objects.get(user=self.user, book=self.book).last_page_no, 1)
+        self.client.post(reverse('progress-update', args=[self.book.pk]), {'last_page_no': '-5'})
+        self.assertEqual(ReadingProgress.objects.get(user=self.user, book=self.book).last_page_no, 1)
+
+    def test_progress_detail_returns_saved_page(self):
+        """取得APIは保存済みの最終ページ番号を返す"""
+        ReadingProgress.objects.create(user=self.user, book=self.book, last_page_no=3)
+        self.client.login(username='progress1', password='testpass123')
+        response = self.client.get(reverse('progress-detail', args=[self.book.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {'book_id': self.book.pk, 'last_page_no': 3})
+
+    def test_progress_detail_defaults_to_first_page(self):
+        """未保存の場合は1ページ目を返す"""
+        self.client.login(username='progress1', password='testpass123')
+        response = self.client.get(reverse('progress-detail', args=[self.book.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['last_page_no'], 1)
+
+    def test_progress_is_per_user(self):
+        """進捗はユーザーごとに分離される"""
+        ReadingProgress.objects.create(user=self.other, book=self.book, last_page_no=3)
+        self.client.login(username='progress1', password='testpass123')
+        response = self.client.get(reverse('progress-detail', args=[self.book.pk]))
+        self.assertEqual(response.json()['last_page_no'], 1)
+
+    def test_book_detail_saves_progress_for_logged_in_user(self):
+        """詳細ページ表示時に開いているページが保存される"""
+        self.client.login(username='progress1', password='testpass123')
+        response = self.client.get(reverse('book-detail', args=[self.book.pk]), {'p': '2'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ReadingProgress.objects.get(user=self.user, book=self.book).last_page_no, 2)
+
+    def test_book_detail_does_not_save_for_anonymous(self):
+        """未ログインの詳細表示では進捗レコードを作らない"""
+        response = self.client.get(reverse('book-detail', args=[self.book.pk]), {'p': '2'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(ReadingProgress.objects.count(), 0)

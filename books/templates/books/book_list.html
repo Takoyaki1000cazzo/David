@@ -116,7 +116,8 @@
 <div class="info">
 <strong><a href="{% url 'book-detail' book.pk %}">{{ book.title }}</a></strong><br>
 たいしょうねんれい: {{ book.age_min }}〜{{ book.age_max }}さい<br>
-{{ book.description_ja|default:book.description|truncatewords:20 }}
+{{ book.description_ja|default:book.description|truncatewords:20 }}<br>
+{% if user.is_authenticated and book.resume_page_no %}<a href="{% url 'book-detail' book.pk %}?p={{ book.resume_page_no }}">つづきから読む (p.{{ book.resume_page_no }})</a>{% endif %}
 </div>
 </div>
 {% empty %}

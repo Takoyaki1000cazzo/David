@@ -222,6 +222,11 @@
         <label><input type="checkbox" id="repeat"> リピート</label>
         <label><input type="checkbox" id="show-ja" checked> にほんごをひょうじ</label>
       </div>
+      {% if user.is_authenticated %}
+      <div class="setting">
+        <form method="post" action="{% url 'progress-update' book.pk %}" style="margin:0;display:flex;gap:8px;align-items:center;">{% csrf_token %}<input type="hidden" name="last_page_no" value="{{ current_no }}"><button type="submit" style="font-family:inherit;font-size:14px;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;">ここまで読んだを保存 (p.{{ current_no }})</button></form>
+      </div>
+      {% endif %}
     </section>
   </main>
   <footer>
