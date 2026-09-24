@@ -11,8 +11,8 @@ class PageInline(admin.TabularInline):
 
 @admin.register(Book)
 class BookAdmin(admin.ModelAdmin):
-    list_display = ('title', 'age_min', 'age_max', 'created_at')
-    list_filter = ('age_min', 'age_max')
+    list_display = ('title', 'status', 'age_min', 'age_max', 'created_at')
+    list_filter = ('status', 'age_min', 'age_max')
     search_fields = ('title',)
     inlines = [PageInline]
 

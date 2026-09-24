@@ -4,12 +4,21 @@ from django.db import models
 
 
 class Book(models.Model):
+    STATUS_DRAFT = 'draft'
+    STATUS_PUBLISHED = 'published'
+    STATUS_CHOICES = [
+        (STATUS_DRAFT, '下書き'),
+        (STATUS_PUBLISHED, '公開'),
+    ]
+
     title = models.CharField(max_length=200)
     cover_image = models.ImageField(upload_to='covers/', blank=True, null=True)
     age_min = models.PositiveSmallIntegerField()
     age_max = models.PositiveSmallIntegerField()
     description = models.TextField(blank=True)
     description_ja = models.TextField(blank=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=STATUS_DRAFT)
+    published_at = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
