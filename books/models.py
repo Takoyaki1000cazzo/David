@@ -13,6 +13,12 @@ class Book(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(age_min__lte=models.F('age_max')),
+                name='age_min_lte_age_max',
+            ),
+        ]
 
     def __str__(self):
         return f'{self.title} ({self.age_min}-{self.age_max})'
