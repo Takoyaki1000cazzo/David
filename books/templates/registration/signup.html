@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>会員登録 - David</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@700&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; padding:24px 16px; background:#FFF8E7; color:#4A2F14; font-family:'Zen Maru Gothic',sans-serif; }
+  .container { max-width:480px; margin:0 auto; background:#fff; border:2px solid #E6D2B4; border-radius:16px; padding:20px; }
+  h1 { font-size:24px; }
+  button { font-size:16px; min-height:44px; padding:8px 16px; border:none; border-radius:10px; background:#FF8C00; color:#fff; cursor:pointer; }
+  input { font-size:16px; padding:6px 8px; width:100%; box-sizing:border-box; }
+  a { color:#5A3C1E; }
+  .helptext, ul.errorlist { font-size:13px; }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>会員登録</h1>
+<form method="post">
+{% csrf_token %}
+{{ form.as_p }}
+<button type="submit">登録する</button>
+</form>
+<p><a href="{% url 'login' %}">すでに登録済みの方はこちら（ログイン）</a></p>
+<p><a href="{% url 'book-list' %}">← いちらんにもどる</a></p>
+</div>
+</body>
+</html>

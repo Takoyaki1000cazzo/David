@@ -103,6 +103,15 @@
 </head>
 <body>
 <div class="container">
+<nav style="display:flex;gap:12px;align-items:center;justify-content:flex-end;font-size:14px;">
+{% if user.is_authenticated %}
+<span>{{ user.username }}さん</span>
+<form method="post" action="{% url 'logout' %}" style="margin:0;">{% csrf_token %}<button type="submit" style="font-size:14px;min-height:36px;padding:4px 12px;">ログアウト</button></form>
+{% else %}
+<a href="{% url 'login' %}">ログイン</a>
+<a href="{% url 'signup' %}">会員登録</a>
+{% endif %}
+</nav>
 <h1>えほんをえらんでね</h1>
 <form method="get" class="filter">
 <label>ねんれい: <input type="number" name="age" value="{{ age }}" min="0" max="12"> さい</label>
