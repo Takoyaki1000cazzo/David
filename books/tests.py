@@ -21,6 +21,18 @@ class BookModelTests(TestCase):
         book = Book(title='Test', age_min=2, age_max=5)
         book.full_clean()
 
+    def test_status_defaults_to_draft(self):
+        book = Book.objects.create(title='Test', age_min=2, age_max=5)
+        self.assertEqual(book.status, Book.STATUS_DRAFT)
+        self.assertIsNone(book.published_at)
+
+    def test_status_can_be_published(self):
+        book = Book.objects.create(
+            title='Test', age_min=2, age_max=5,
+            status=Book.STATUS_PUBLISHED)
+        book.full_clean()
+        self.assertEqual(book.status, Book.STATUS_PUBLISHED)
+
 
 class PageModelTests(TestCase):
     def test_duplicate_page_no_raises_integrity_error(self):
