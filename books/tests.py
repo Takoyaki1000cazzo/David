@@ -299,3 +299,91 @@ class FavoriteViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Fav Book')
         self.assertNotContains(response, 'Other Fav Book')
+
+
+class AuthFlowTests(TestCase):
+    """サインアップ〜ログイン〜ログアウトとアクセス制限の一通りの動作チェック"""
+
+    def setUp(self):
+        User = get_user_model()
+        self.User = User
+        self.user = User.objects.create_user(username='authuser', password='testpass123')
+        self.book = Book.objects.create(title='Auth Book', age_min=2, age_max=5)
+
+    def test_signup_creates_user_and_logs_in(self):
+        """POST /accounts/signup/ でユーザーが作成されログイン状態になる"""
+        response = self.client.post(reverse('signup'), {
+            'username': 'newuser',
+            'password1': 'strongpass123',
+            'password2': 'strongpass123',
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('book-list'))
+        self.assertTrue(self.User.objects.filter(username='newuser').exists())
+        # サインアップ直後はログイン済みとして扱われる
+        response = self.client.get(reverse('book-list'))
+        self.assertTrue(response.context['user'].is_authenticated)
+
+    def test_signup_page_returns_200(self):
+        response = self.client.get(reverse('signup'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_login_works(self):
+        """POST /accounts/login/ でログインできる"""
+        response = self.client.post(reverse('login'), {
+            'username': 'authuser',
+            'password': 'testpass123',
+        })
+        self.assertEqual(response.status_code, 302)
+        response = self.client.get(reverse('book-list'))
+        self.assertTrue(response.context['user'].is_authenticated)
+
+    def test_login_page_returns_200(self):
+        response = self.client.get(reverse('login'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_logout_works(self):
+        """POST /accounts/logout/ でログアウトできる"""
+        self.client.login(username='authuser', password='testpass123')
+        response = self.client.post(reverse('logout'))
+        self.assertEqual(response.status_code, 302)
+        response = self.client.get(reverse('book-list'))
+        self.assertFalse(response.context['user'].is_authenticated)
+
+    def test_favorite_requires_login(self):
+        """未ログインでお気に入りPOSTはログイン画面へリダイレクトする"""
+        url = reverse('favorite-toggle', args=[self.book.pk])
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse('login'), response.url)
+
+    def test_favorite_toggle_authenticated(self):
+        """ログイン時はお気に入り登録/解除がトグル動作する"""
+        self.client.login(username='authuser', password='testpass123')
+        url = reverse('favorite-toggle', args=[self.book.pk])
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Favorite.objects.count(), 1)
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Favorite.objects.count(), 0)
+
+    def test_progress_requires_login(self):
+        """未ログインで読書進捗POSTはログイン画面へリダイレクトする"""
+        url = reverse('progress-update', args=[self.book.pk])
+        response = self.client.post(url, {'last_page_no': 2})
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse('login'), response.url)
+
+    def test_progress_update_authenticated(self):
+        """ログイン時は読書進捗が保存・更新される"""
+        self.client.login(username='authuser', password='testpass123')
+        url = reverse('progress-update', args=[self.book.pk])
+        response = self.client.post(url, {'last_page_no': 2})
+        self.assertEqual(response.status_code, 302)
+        progress = ReadingProgress.objects.get(user=self.user, book=self.book)
+        self.assertEqual(progress.last_page_no, 2)
+        response = self.client.post(url, {'last_page_no': 5})
+        progress.refresh_from_db()
+        self.assertEqual(progress.last_page_no, 5)
+        self.assertEqual(ReadingProgress.objects.count(), 1)
