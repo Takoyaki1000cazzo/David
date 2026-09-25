@@ -1,3 +1,4 @@
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
@@ -71,6 +72,14 @@ def book_list(request):
     if age and age.isdigit():
         age = int(age)
         books = books.filter(age_min__lte=age, age_max__gte=age)
+    sort = request.GET.get('sort', 'new')
+    if sort == 'title':
+        books = books.order_by('title')
+    elif sort == 'age':
+        books = books.order_by('age_min', 'age_max')
+    else:
+        sort = 'new'
+        books = books.order_by('-created_at')
     books = list(books)
     if request.user.is_authenticated:
         progress_map = {
@@ -86,7 +95,7 @@ def book_list(request):
         for book in books:
             book.resume_page_no = None
         favorite_ids = set()
-    return render(request, 'books/book_list.html', {'books': books, 'age': request.GET.get('age', ''), 'favorite_ids': favorite_ids})
+    return render(request, 'books/book_list.html', {'books': books, 'age': request.GET.get('age', ''), 'sort': sort, 'favorite_ids': favorite_ids})
 
 
 def book_detail(request, pk):
@@ -123,6 +132,7 @@ def book_detail(request, pk):
         'last_page_no': last_page_no,
         'is_favorite': is_favorite,
         'saved_page_no': saved_page_no,
+        'is_draft': book.status == Book.STATUS_DRAFT,
     }
     return render(request, 'books/book_detail.html', context)
 
@@ -258,6 +268,15 @@ def _collect_validation_errors(prefix, validation_error):
     for field, messages in validation_error.message_dict.items():
         collected[f'{prefix}.{field}'] = list(messages)
     return collected
+
+
+@staff_member_required
+@require_GET
+def book_bulk_edit_form(request, pk):
+    """一括編集のHTMLフォーム画面（スタッフ専用）。保存はJSが既存APIへPOSTする。"""
+    book = get_object_or_404(Book.objects.prefetch_related('pages'), pk=pk)
+    pages = list(book.pages.all())
+    return render(request, 'books/bulk_edit.html', {'book': book, 'pages': pages})
 
 
 @require_POST

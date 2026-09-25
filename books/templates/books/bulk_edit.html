@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ book.title }} の一括編集 - David</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@700&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; padding:12px 16px 32px; background:#FFF8E7; color:#4A2F14; font-family:'Zen Maru Gothic',sans-serif; }
+  .container { max-width:960px; margin:0 auto; }
+  a { color:#5A3C1E; }
+  fieldset { background:#fff; border:2px solid #E6D2B4; border-radius:16px; padding:12px 16px; margin:12px 0; }
+  legend { font-size:18px; padding:0 8px; }
+  label { display:block; margin:8px 0; font-size:15px; }
+  input[type="text"], input[type="number"], textarea, select {
+    font-family:inherit; font-size:16px; padding:6px 8px; width:100%; box-sizing:border-box;
+    border:1px solid #E6D2B4; border-radius:8px; background:#FFFBF0;
+  }
+  textarea { min-height:80px; }
+  button { font-family:inherit; font-size:16px; min-height:44px; padding:8px 16px; border:none; border-radius:10px; background:#FF8C00; color:#fff; cursor:pointer; }
+  button.secondary { background:#fff; border:2px solid #FF9646; color:#E46A1A; }
+  #bulk-errors { display:none; background:#FDECEA; border:2px solid #E57373; border-radius:12px; padding:8px 16px; margin:12px 0; }
+  .staff-note { background:#fff; border:2px dashed #E6D2B4; border-radius:12px; padding:8px 16px; font-size:14px; }
+</style>
+</head>
+<body>
+<div class="container">
+<p><a href="{% url 'book-detail' book.pk %}">← 詳細にもどる</a></p>
+<h1>一括編集: {{ book.title }}</h1>
+<p class="staff-note">スタッフ専用画面です。保存すると絵本情報と全ページがまとめて更新されます。</p>
+<div id="bulk-errors"></div>
+<form id="bulk-form" method="post" enctype="multipart/form-data">
+{% csrf_token %}
+<fieldset>
+<legend>絵本情報</legend>
+<label>タイトル: <input type="text" id="book-title" value="{{ book.title }}"></label>
+<label>対象年齢（開始）: <input type="number" id="book-age-min" value="{{ book.age_min }}" min="0" max="12"></label>
+<label>対象年齢（終了）: <input type="number" id="book-age-max" value="{{ book.age_max }}" min="0" max="12"></label>
+<label>説明（英語）: <textarea id="book-description">{{ book.description }}</textarea></label>
+<label>説明（日本語）: <textarea id="book-description-ja">{{ book.description_ja }}</textarea></label>
+<label>公開状態:
+<select id="book-status">
+<option value="draft"{% if book.status == 'draft' %} selected{% endif %}>下書き</option>
+<option value="published"{% if book.status == 'published' %} selected{% endif %}>公開</option>
+</select>
+</label>
+<label>表紙画像（変更する場合のみ）: <input type="file" id="cover-image" accept="image/*"></label>
+</fieldset>
+<div id="pages">
+{% for page in pages %}
+<fieldset class="page-block" data-page-no="{{ page.page_no }}">
+<legend>ページ {{ page.page_no }}</legend>
+<label>英文テキスト: <textarea class="page-text-en">{{ page.text_en }}</textarea></label>
+<label>日本語テキスト: <textarea class="page-text-ja">{{ page.text_ja }}</textarea></label>
+<label>画像（変更する場合のみ）: <input type="file" class="page-image" accept="image/*"></label>
+</fieldset>
+{% endfor %}
+</div>
+<p><button type="button" id="add-page" class="secondary">＋ ページを追加</button></p>
+<p><button type="submit">保存する</button></p>
+</form>
+</div>
+<template id="page-template">
+<fieldset class="page-block" data-page-no="__NO__">
+<legend>ページ __NO__（新規）</legend>
+<label>英文テキスト: <textarea class="page-text-en"></textarea></label>
+<label>日本語テキスト: <textarea class="page-text-ja"></textarea></label>
+<label>画像: <input type="file" class="page-image" accept="image/*"></label>
+</fieldset>
+</template>
+<script>
+const form = document.getElementById('bulk-form');
+const errBox = document.getElementById('bulk-errors');
+document.getElementById('add-page').addEventListener('click', () => {
+  const blocks = document.querySelectorAll('.page-block');
+  let maxNo = 0;
+  blocks.forEach(b => { maxNo = Math.max(maxNo, parseInt(b.dataset.pageNo, 10)); });
+  const html = document.getElementById('page-template').innerHTML.replaceAll('__NO__', String(maxNo + 1));
+  document.getElementById('pages').insertAdjacentHTML('beforeend', html);
+});
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  errBox.style.display = 'none';
+  errBox.innerHTML = '';
+  const payload = {
+    book: {
+      title: document.getElementById('book-title').value,
+      age_min: parseInt(document.getElementById('book-age-min').value, 10),
+      age_max: parseInt(document.getElementById('book-age-max').value, 10),
+      description: document.getElementById('book-description').value,
+      description_ja: document.getElementById('book-description-ja').value,
+      status: document.getElementById('book-status').value,
+    },
+    pages: [],
+  };
+  const fd = new FormData();
+  document.querySelectorAll('.page-block').forEach(block => {
+    const pageNo = parseInt(block.dataset.pageNo, 10);
+    payload.pages.push({
+      page_no: pageNo,
+      text_en: block.querySelector('.page-text-en').value,
+      text_ja: block.querySelector('.page-text-ja').value,
+    });
+    const img = block.querySelector('.page-image').files[0];
+    if (img) fd.append('page_image_' + pageNo, img);
+  });
+  const cover = document.getElementById('cover-image').files[0];
+  if (cover) fd.append('cover_image', cover);
+  fd.append('payload', JSON.stringify(payload));
+  const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
+  const res = await fetch("{% url 'book-bulk-edit' book.pk %}", {
+    method: 'POST', headers: {'X-CSRFToken': csrf}, body: fd,
+  });
+  const data = await res.json();
+  if (!res.ok) {
+    const items = Object.entries(data.errors || {detail: [data.detail || '保存に失敗しました。']})
+      .map(([k, v]) => '<li>' + k + ': ' + v.join(', ') + '</li>').join('');
+    errBox.innerHTML = '<ul>' + items + '</ul>';
+    errBox.style.display = 'block';
+    window.scrollTo(0, 0);
+    return;
+  }
+  location.href = "{% url 'book-detail' book.pk %}";
+});
+</script>
+</body>
+</html>

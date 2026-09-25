@@ -37,6 +37,20 @@
       flex-shrink: 0;
     }
     header a { color: #5A3C1E; text-decoration: none; }
+    .staff-bar {
+      display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+      padding: 6px 20px; font-size: 14px; flex-shrink: 0;
+      background: #EDE7F6; border-bottom: 2px solid #C5B3E0;
+    }
+    .staff-bar a { color: #5A3C1E; }
+    .draft-badge {
+      background: #7E57C2; color: #fff; border-radius: 8px; padding: 2px 10px;
+      font-size: 13px; white-space: nowrap;
+    }
+    .staff-bar button {
+      font-family: inherit; font-size: 13px; padding: 4px 10px; border-radius: 8px;
+      border: 1px solid #C5B3E0; background: #fff; cursor: pointer;
+    }
     header strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     header > span { flex-shrink: 0; }
     header span { white-space: nowrap; }
@@ -161,6 +175,7 @@
     @media (orientation: portrait) and (max-width: 1100px) {
       body { height: 100vh; height: 100dvh; overflow: hidden; }
       header { min-height: 0; height: 52px; padding: 6px 12px; gap: 8px; font-size: 14px; flex-wrap: nowrap; overflow: hidden; }
+      .staff-bar { padding: 4px 12px; font-size: 13px; }
       header strong { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       main.d8-layout { flex-direction: column; gap: 8px; padding: 8px 12px; overflow: hidden; }
       .img-card, .text-card { padding: 8px 12px; min-height: 0; overflow: hidden; }
@@ -239,6 +254,14 @@
       {% endif %}
     </span>
   </header>
+
+  {% if user.is_staff %}
+  <div class="staff-bar">
+    {% if is_draft %}<span class="draft-badge">下書きプレビュー中（一般には非公開）</span>{% endif %}
+    <a href="{% url 'book-bulk-edit-form' book.pk %}">一括編集</a>
+    <form method="post" action="{% url 'book-copy' book.pk %}" style="margin:0;">{% csrf_token %}<button type="submit">複製する</button></form>
+  </div>
+  {% endif %}
 
   {% if page %}
   <main class="d8-layout">
@@ -393,5 +416,6 @@
     <p>ページがまだありません。adminで追加してください。</p>
   </main>
   {% endif %}
+  {% include "books/_credits.html" %}
 </body>
 </html>
