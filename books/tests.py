@@ -1,3 +1,4 @@
+import json
 import shutil
 import tempfile
 
@@ -751,6 +752,126 @@ class AuthFlowTests(TestCase):
         progress.refresh_from_db()
         self.assertEqual(progress.last_page_no, 5)
         self.assertEqual(ReadingProgress.objects.count(), 1)
+
+
+
+
+class BookBulkEditTests(TestCase):
+    """一括更新API: 正常更新・ロールバック・権限の動作チェック"""
+
+    GIF = (
+        b'GIF89a\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00'
+        b'\xff\xff\xff!\xf9\x04\x00\x00\x00\x00\x00,\x00\x00\x00\x00'
+        b'\x01\x00\x01\x00\x00\x02\x02D\x01\x00;'
+    )
+
+    def setUp(self):
+        self.media_root = tempfile.mkdtemp()
+        self.override = override_settings(MEDIA_ROOT=self.media_root)
+        self.override.enable()
+        self.addCleanup(self.override.disable)
+        self.addCleanup(shutil.rmtree, self.media_root, True)
+        User = get_user_model()
+        self.staff = User.objects.create_user(username='bulkstaff', password='testpass123', is_staff=True)
+        self.user = User.objects.create_user(username='bulkuser', password='testpass123')
+        self.book = Book.objects.create(
+            title='Bulk Book', age_min=2, age_max=5, status=Book.STATUS_DRAFT)
+        self.page1 = Page.objects.create(book=self.book, page_no=1, text_en='One', text_ja='いち')
+        self.page2 = Page.objects.create(book=self.book, page_no=2, text_en='Two', text_ja='に')
+        self.url = reverse('book-bulk-edit', args=[self.book.pk])
+
+    def post_json(self, payload):
+        return self.client.post(self.url, data=json.dumps(payload), content_type='application/json')
+
+    def test_staff_valid_bulk_update(self):
+        """スタッフが正しいデータで一括更新するとDBが更新される"""
+        self.client.login(username='bulkstaff', password='testpass123')
+        response = self.post_json({
+            'book': {'title': 'Bulk Updated', 'age_min': 3, 'age_max': 6, 'status': 'published'},
+            'pages': [
+                {'page_no': 1, 'text_en': 'One Updated', 'text_ja': 'いち更新'},
+                {'page_no': 2, 'text_en': 'Two', 'audio_url': 'https://example.com/a.mp3'},
+                {'page_no': 3, 'text_en': 'Three New', 'text_ja': 'さん'},
+            ],
+        })
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['book_id'], self.book.pk)
+        self.assertEqual(sorted(data['updated_pages']), [1, 2])
+        self.assertEqual(data['created_pages'], [3])
+        self.book.refresh_from_db()
+        self.assertEqual((self.book.title, self.book.age_min, self.book.age_max, self.book.status),
+                         ('Bulk Updated', 3, 6, Book.STATUS_PUBLISHED))
+        self.assertEqual(Page.objects.get(book=self.book, page_no=1).text_en, 'One Updated')
+        self.assertEqual(Page.objects.get(book=self.book, page_no=2).audio_url, 'https://example.com/a.mp3')
+        self.assertEqual(Page.objects.filter(book=self.book).count(), 3)
+
+    def test_validation_error_rolls_back_everything(self):
+        """不整合があれば一部も含めて更新されず400を返す"""
+        self.client.login(username='bulkstaff', password='testpass123')
+        response = self.post_json({
+            'book': {'title': 'Should Not Save'},
+            'pages': [
+                {'page_no': 1, 'text_en': 'Should Not Save Either'},
+                {'page_no': 1, 'text_en': 'Duplicate page_no'},
+            ],
+        })
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('errors', response.json())
+        self.book.refresh_from_db()
+        self.assertEqual(self.book.title, 'Bulk Book')
+        self.assertEqual(Page.objects.get(pk=self.page1.pk).text_en, 'One')
+        self.assertEqual(Page.objects.filter(book=self.book).count(), 2)
+
+    def test_invalid_age_range_rolls_back(self):
+        """age_min > age_max は検証エラーとなり何も更新されない"""
+        self.client.login(username='bulkstaff', password='testpass123')
+        response = self.post_json({
+            'book': {'age_min': 6, 'age_max': 3},
+            'pages': [{'page_no': 2, 'text_en': 'Should Not Save'}],
+        })
+        self.assertEqual(response.status_code, 400)
+        self.book.refresh_from_db()
+        self.assertEqual((self.book.age_min, self.book.age_max), (2, 5))
+        self.assertEqual(Page.objects.get(pk=self.page2.pk).text_en, 'Two')
+
+    def test_anonymous_returns_401(self):
+        """未ログインは401になる"""
+        response = self.post_json({'book': {'title': 'Nope'}})
+        self.assertEqual(response.status_code, 401)
+        self.book.refresh_from_db()
+        self.assertEqual(self.book.title, 'Bulk Book')
+
+    def test_general_user_returns_403(self):
+        """一般ユーザーは403になる"""
+        self.client.login(username='bulkuser', password='testpass123')
+        response = self.post_json({'book': {'title': 'Nope'}})
+        self.assertEqual(response.status_code, 403)
+        self.book.refresh_from_db()
+        self.assertEqual(self.book.title, 'Bulk Book')
+
+    def test_image_update_via_multipart(self):
+        """multipartでページ画像を一括更新できる"""
+        self.client.login(username='bulkstaff', password='testpass123')
+        response = self.client.post(self.url, {
+            'payload': json.dumps({'pages': [{'page_no': 1, 'text_en': 'One'}]}),
+            'page_image_1': SimpleUploadedFile('p1.gif', self.GIF, 'image/gif'),
+        })
+        self.assertEqual(response.status_code, 200)
+        page = Page.objects.get(pk=self.page1.pk)
+        self.assertTrue(page.image.name)
+        with page.image.open('rb') as f:
+            self.assertEqual(f.read(), self.GIF)
+
+    def test_invalid_image_returns_400_without_update(self):
+        """画像として読めないファイルは400となり何も更新されない"""
+        self.client.login(username='bulkstaff', password='testpass123')
+        response = self.client.post(self.url, {
+            'payload': json.dumps({'pages': [{'page_no': 1, 'text_en': 'Should Not Save'}]}),
+            'page_image_1': SimpleUploadedFile('p1.txt', b'not an image', 'text/plain'),
+        })
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(Page.objects.get(pk=self.page1.pk).text_en, 'One')
 
 
 class BookCopyTests(TestCase):

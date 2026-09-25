@@ -1,13 +1,21 @@
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.files.base import ContentFile
+from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 
-from .models import Book, Favorite, ReadingProgress
+import json
+import os
+from io import BytesIO
+
+from PIL import Image
+
+from .models import Book, Favorite, Page, ReadingProgress
 from .services import copy_book
 
 
@@ -211,6 +219,177 @@ def progress_detail(request, pk):
     return JsonResponse({
         'book_id': book.pk,
         'last_page_no': progress.last_page_no if progress else 1,
+    })
+
+
+BULK_EDIT_BOOK_FIELDS = ('title', 'age_min', 'age_max', 'description', 'description_ja', 'status')
+BULK_EDIT_PAGE_FIELDS = ('text_en', 'text_ja', 'audio_url')
+BULK_EDIT_IMAGE_EXTENSIONS = {'.gif', '.jpg', '.jpeg', '.png', '.webp'}
+BULK_EDIT_MAX_IMAGE_SIZE = 5 * 1024 * 1024
+
+
+def _validate_bulk_image(uploaded):
+    """アップロード画像の検証。成功時はファイル内容(bytes)、失敗時はエラー文を返す。"""
+    ext = os.path.splitext(uploaded.name)[1].lower()
+    if ext not in BULK_EDIT_IMAGE_EXTENSIONS:
+        return None, f'対応していない画像形式です: {ext or "(拡張子なし)"}'
+    if uploaded.size > BULK_EDIT_MAX_IMAGE_SIZE:
+        return None, '画像サイズは5MB以下にしてください。'
+    try:
+        content = uploaded.read()
+    except (OSError, ValueError):
+        return None, '画像ファイルを読み取れませんでした。'
+    try:
+        Image.open(BytesIO(content)).verify()
+    except Exception:
+        return None, '画像ファイルとして読み取れませんでした。'
+    return content, None
+
+
+def _collect_validation_errors(prefix, validation_error):
+    collected = {}
+    for field, messages in validation_error.message_dict.items():
+        collected[f'{prefix}.{field}'] = list(messages)
+    return collected
+
+
+@require_POST
+@transaction.atomic
+def book_bulk_edit(request, pk):
+    """絵本＋複数ページの一括更新API（スタッフ専用）。
+
+    JSON例: {"book": {"title": ..., "age_min": 3, ...},
+             "pages": [{"page_no": 1, "text_en": ...}, ...]}
+    画像は multipart で `payload`(JSON文字列)＋`page_image_<page_no>` /
+    `cover_image` として送る。存在するpage_noは更新、無ければ新規作成する。
+    全件検証してから保存し、不整合があれば何も更新せず400を返す。
+    """
+    if not request.user.is_authenticated:
+        return JsonResponse({'detail': '認証が必要です。'}, status=401)
+    if not request.user.is_staff:
+        return JsonResponse({'detail': 'スタッフ権限が必要です。'}, status=403)
+    book = get_object_or_404(Book.objects.prefetch_related('pages'), pk=pk)
+
+    if request.content_type and 'multipart' in request.content_type:
+        try:
+            data = json.loads(request.POST.get('payload', '{}'))
+        except (ValueError, TypeError):
+            return JsonResponse({'errors': {'payload': ['JSONとして読み取れませんでした。']}}, status=400)
+        files = request.FILES
+    else:
+        try:
+            data = json.loads(request.body or b'{}')
+        except (ValueError, TypeError):
+            return JsonResponse({'errors': {'payload': ['JSONとして読み取れませんでした。']}}, status=400)
+        files = {}
+    if not isinstance(data, dict):
+        return JsonResponse({'errors': {'payload': ['オブジェクトで指定してください。']}}, status=400)
+
+    errors = {}
+
+    book_data = data.get('book', {})
+    if not isinstance(book_data, dict):
+        errors['book'] = ['オブジェクトで指定してください。']
+        book_data = {}
+    unknown_book_fields = set(book_data) - set(BULK_EDIT_BOOK_FIELDS)
+    if unknown_book_fields:
+        errors['book'] = [f'更新できないフィールドです: {", ".join(sorted(unknown_book_fields))}']
+    for field in ('age_min', 'age_max'):
+        if field in book_data and (isinstance(book_data[field], bool) or not isinstance(book_data[field], int)):
+            errors[f'book.{field}'] = ['整数で指定してください。']
+    for field in ('title', 'description', 'description_ja', 'status'):
+        if field in book_data and not isinstance(book_data[field], str):
+            errors[f'book.{field}'] = ['文字列で指定してください。']
+    if not errors:
+        for field in BULK_EDIT_BOOK_FIELDS:
+            if field in book_data:
+                setattr(book, field, book_data[field])
+    cover_file = files.get('cover_image')
+    cover_content = None
+    if cover_file is not None:
+        cover_content, message = _validate_bulk_image(cover_file)
+        if message:
+            errors['cover_image'] = [message]
+
+    pages_data = data.get('pages', [])
+    if not isinstance(pages_data, list):
+        errors['pages'] = ['リストで指定してください。']
+        pages_data = []
+    existing_pages = {page.page_no: page for page in book.pages.all()}
+    planned_pages = []
+    seen_page_nos = set()
+    for index, item in enumerate(pages_data):
+        key = f'pages[{index}]'
+        if not isinstance(item, dict):
+            errors[key] = ['オブジェクトで指定してください。']
+            continue
+        page_no = item.get('page_no')
+        if isinstance(page_no, bool) or not isinstance(page_no, int) or page_no < 1:
+            errors[f'{key}.page_no'] = ['page_noは1以上の整数で指定してください。']
+            continue
+        if page_no in seen_page_nos:
+            errors[f'{key}.page_no'] = ['page_noが重複しています。']
+            continue
+        seen_page_nos.add(page_no)
+        if page_no in existing_pages:
+            page = existing_pages[page_no]
+            is_new = False
+        else:
+            page = Page(book=book, page_no=page_no)
+            is_new = True
+        item_has_error = False
+        for field in BULK_EDIT_PAGE_FIELDS:
+            if field in item:
+                if not isinstance(item[field], str):
+                    errors[f'{key}.{field}'] = ['文字列で指定してください。']
+                    item_has_error = True
+                else:
+                    setattr(page, field, item[field])
+        if is_new and not page.text_en:
+            errors[f'{key}.text_en'] = ['新規ページにはtext_enが必要です。']
+            item_has_error = True
+        image_file = files.get(f'page_image_{page_no}')
+        image_content = None
+        if image_file is not None:
+            image_content, message = _validate_bulk_image(image_file)
+            if message:
+                errors[f'{key}.image'] = [message]
+                item_has_error = True
+        if not item_has_error:
+            planned_pages.append((page, is_new, image_content,
+                                  image_file.name if image_file is not None else None))
+
+    if not errors:
+        try:
+            book.full_clean()
+        except ValidationError as exc:
+            errors.update(_collect_validation_errors('book', exc))
+        for page, _is_new, _image_content, _image_name in planned_pages:
+            try:
+                page.full_clean()
+            except ValidationError as exc:
+                errors.update(_collect_validation_errors(f'pages[page_no={page.page_no}]', exc))
+
+    if errors:
+        return JsonResponse({'errors': errors}, status=400)
+
+    book_updated = bool(book_data) or cover_content is not None
+    if cover_content is not None:
+        book.cover_image.save(cover_file.name, ContentFile(cover_content), save=False)
+    if book_updated:
+        book.save()
+    updated_pages = []
+    created_pages = []
+    for page, is_new, image_content, image_name in planned_pages:
+        if image_content is not None:
+            page.image.save(image_name, ContentFile(image_content), save=False)
+        page.save()
+        (created_pages if is_new else updated_pages).append(page.page_no)
+    return JsonResponse({
+        'book_id': book.pk,
+        'updated_book': book_updated,
+        'updated_pages': sorted(updated_pages),
+        'created_pages': sorted(created_pages),
     })
 
 
