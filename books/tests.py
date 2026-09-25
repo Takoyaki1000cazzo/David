@@ -118,6 +118,80 @@ class BookDetailPageValidationTests(TestCase):
         self.assertContains(response, 'Page One')
 
 
+class AutoNextPageTests(TestCase):
+    """自動次ページ: 次ページ判定・最終ページ停止・範囲外の安全処理"""
+
+    def setUp(self):
+        self.book = Book.objects.create(title='Next Book', age_min=2, age_max=5, status=Book.STATUS_PUBLISHED)
+        Page.objects.create(book=self.book, page_no=1, text_en='Page One')
+        Page.objects.create(book=self.book, page_no=2, text_en='Page Two')
+        Page.objects.create(book=self.book, page_no=3, text_en='Page Three')
+        self.url = reverse('book-detail', args=[self.book.pk])
+        self.api_url = reverse('page-next', args=[self.book.pk])
+
+    def test_middle_page_returns_next_page(self):
+        """途中ページでは次のページ番号を返す"""
+        response = self.client.get(self.url, {'p': '1'})
+        self.assertEqual(response.context['has_next'], True)
+        self.assertEqual(response.context['next_page'], 2)
+        data = self.client.get(self.api_url, {'p': '1'}).json()
+        self.assertEqual(data, {
+            'book_id': self.book.pk, 'current_no': 1, 'total': 3,
+            'has_prev': False, 'has_next': True,
+            'prev_page': None, 'next_page': 2,
+            'next_url': f'/books/{self.book.pk}/?p=2',
+        })
+
+    def test_last_page_returns_stop_signal(self):
+        """最終ページでは has_next=false / next_page=null で停止信号を返す"""
+        response = self.client.get(self.url, {'p': '3'})
+        self.assertEqual(response.context['has_next'], False)
+        self.assertIsNone(response.context['next_page'])
+        data = self.client.get(self.api_url, {'p': '3'}).json()
+        self.assertEqual(data['has_next'], False)
+        self.assertIsNone(data['next_page'])
+        self.assertIsNone(data['next_url'])
+
+    def test_first_page_has_no_prev(self):
+        """1ページ目では prev_page=None を返す"""
+        data = self.client.get(self.api_url, {'p': '1'}).json()
+        self.assertEqual(data['has_prev'], False)
+        self.assertIsNone(data['prev_page'])
+
+    def test_api_out_of_range_is_safe(self):
+        """範囲外の?p=でも500にならず丸めて処理する"""
+        data = self.client.get(self.api_url, {'p': '-5'}).json()
+        self.assertEqual(data['current_no'], 1)
+        data = self.client.get(self.api_url, {'p': '999'}).json()
+        self.assertEqual(data['current_no'], 3)
+        self.assertFalse(data['has_next'])
+        self.assertIsNone(data['next_page'])
+
+    def test_api_invalid_p_falls_back_to_first(self):
+        """?p=abc・空欄は1ページ目にフォールバックする"""
+        self.assertEqual(self.client.get(self.api_url, {'p': 'abc'}).json()['current_no'], 1)
+        response = self.client.get(f'{self.api_url}?p=')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['current_no'], 1)
+
+    def test_api_missing_book_returns_404(self):
+        """存在しない絵本は404（500ではない）"""
+        response = self.client.get(reverse('page-next', args=[9999]))
+        self.assertEqual(response.status_code, 404)
+
+    def test_book_without_pages_is_safe(self):
+        """ページ無しの絵本でもエラーにならず停止信号を返す"""
+        empty = Book.objects.create(title='Empty', age_min=1, age_max=2, status=Book.STATUS_PUBLISHED)
+        response = self.client.get(reverse('book-detail', args=[empty.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.context['has_next'])
+        self.assertIsNone(response.context['next_page'])
+        data = self.client.get(reverse('page-next', args=[empty.pk])).json()
+        self.assertFalse(data['has_next'])
+        self.assertIsNone(data['next_page'])
+        self.assertIsNone(data['next_url'])
+
+
 class BookViewTests(TestCase):
     """D4a: 一覧・詳細・年齢絞り込みの画面動作チェック"""
 

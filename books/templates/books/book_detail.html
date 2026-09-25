@@ -241,9 +241,10 @@
     </section>
   </main>
   <footer>
-    {% if has_prev %}<a class="prev" href="?p={{ prev_no }}">＜ まえのページ</a>{% endif %}
-    {% if has_next %}<a class="next" href="?p={{ next_no }}">つぎのページ ＞</a>{% endif %}
+    {% if has_prev %}<a class="prev" href="?p={{ prev_page }}">＜ まえのページ</a>{% endif %}
+    {% if has_next %}<a class="next" href="?p={{ next_page }}">つぎのページ ＞</a>{% endif %}
   </footer>
+  {{ nav|json_script:"page-nav" }}
   <script>
   const btn = document.getElementById('speak-btn');
   const stopBtn = document.getElementById('stop-btn');
