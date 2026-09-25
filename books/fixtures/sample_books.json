@@ -9,6 +9,8 @@
       "age_max": 5,
       "description": "A simple repetition story about climbing up and down. Great for action words and reading aloud together.",
       "description_ja": "のぼる／おりるの繰り返しで、動作語の学習にぴったりの絵本です。",
+      "status": "published",
+      "published_at": "2026-09-21T00:00:00Z",
       "created_at": "2026-09-21T00:00:00Z"
     }
   },
@@ -48,6 +50,8 @@
       "age_max": 5,
       "description": "A friendly introduction story with short self-introduction lines that children can imitate.",
       "description_ja": "短い自己紹介の連続で、子どもが言い真似しやすい絵本です。",
+      "status": "published",
+      "published_at": "2026-09-21T00:00:10Z",
       "created_at": "2026-09-21T00:00:10Z"
     }
   },
@@ -87,6 +91,8 @@
       "age_max": 5,
       "description": "A sound-based story where children can copy animal noises and simple sounds.",
       "description_ja": "動物の鳴き声や音をまねして遊べる、音の絵本です。",
+      "status": "published",
+      "published_at": "2026-09-21T00:00:20Z",
       "created_at": "2026-09-21T00:00:20Z"
     }
   },
@@ -126,6 +132,8 @@
       "age_max": 5,
       "description": "A cheerful picture book themed around smiling, kindness, and face expressions.",
       "description_ja": "えがおとやさしい気持ちを育てる、表情遊びに使いやすい絵本です。",
+      "status": "published",
+      "published_at": "2026-09-21T00:00:30Z",
       "created_at": "2026-09-21T00:00:30Z"
     }
   },
@@ -165,6 +173,8 @@
       "age_max": 5,
       "description": "A gentle story about a cap and the moon, using a small and easy vocabulary set.",
       "description_ja": "帽子と月が登場する、語彙が少なくやさしいお話です。",
+      "status": "published",
+      "published_at": "2026-09-21T00:00:40Z",
       "created_at": "2026-09-21T00:00:40Z"
     }
   },
