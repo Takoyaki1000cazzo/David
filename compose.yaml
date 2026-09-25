@@ -43,6 +43,12 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
 
   nginx:
     # 開発は :8000 直結（runserver が /static/ を配信）。
@@ -57,7 +63,8 @@ services:
       - staticfiles:/srv/static:ro
       - ./media:/srv/media:ro
     depends_on:
-      - web
+      web:
+        condition: service_healthy
 
 volumes:
   mysql_data:
