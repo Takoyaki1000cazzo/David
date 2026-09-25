@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_http_methods
 
 from .models import Book, Favorite, ReadingProgress
 
@@ -40,6 +40,13 @@ def book_detail(request, pk):
     return render(request, 'books/book_detail.html', context)
 
 
+def _safe_redirect(request, default_name, **kwargs):
+    next_url = request.POST.get('next') or request.GET.get('next')
+    if next_url and next_url.startswith('/'):
+        return redirect(next_url)
+    return redirect(default_name, **kwargs)
+
+
 def signup(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
@@ -53,13 +60,35 @@ def signup(request):
 
 
 @login_required
+def favorite_list(request):
+    favorites = Favorite.objects.filter(user=request.user).select_related('book').order_by('-created_at')
+    return render(request, 'books/favorite_list.html', {'favorites': favorites})
+
+
+@login_required
+@require_POST
+def favorite_add(request, pk):
+    book = get_object_or_404(Book, pk=pk)
+    Favorite.objects.get_or_create(user=request.user, book=book)
+    return _safe_redirect(request, 'book-detail', pk=book.pk)
+
+
+@login_required
+@require_http_methods(['POST', 'DELETE'])
+def favorite_remove(request, pk):
+    book = get_object_or_404(Book, pk=pk)
+    Favorite.objects.filter(user=request.user, book=book).delete()
+    return _safe_redirect(request, 'favorite-list')
+
+
+@login_required
 @require_POST
 def favorite_toggle(request, pk):
     book = get_object_or_404(Book, pk=pk)
     favorite, created = Favorite.objects.get_or_create(user=request.user, book=book)
     if not created:
         favorite.delete()
-    return redirect('book-detail', pk=book.pk)
+    return _safe_redirect(request, 'book-detail', pk=book.pk)
 
 
 @login_required
