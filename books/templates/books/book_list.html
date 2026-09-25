@@ -127,7 +127,7 @@
 <strong><a href="{% url 'book-detail' book.pk %}">{{ book.title }}</a></strong><br>
 たいしょうねんれい: {{ book.age_min }}〜{{ book.age_max }}さい<br>
 {{ book.description_ja|default:book.description|truncatewords:20 }}<br>
-{% if user.is_authenticated and book.resume_page_no %}<a href="{% url 'book-detail' book.pk %}?p={{ book.resume_page_no }}">つづきから読む (p.{{ book.resume_page_no }})</a><br>{% endif %}
+{% if user.is_authenticated and book.resume_page_no %}<br><a href="{% url 'book-detail' book.pk %}?p={{ book.resume_page_no }}" style="display:inline-block;margin-top:6px;padding:6px 14px;border-radius:10px;background:#FF8C00;color:#fff;text-decoration:none;">📖 つづきから読む (p.{{ book.resume_page_no }})</a>{% endif %}
 {% if user.is_authenticated %}
 <form method="post" action="{% url 'favorite-toggle' book.pk %}" style="margin:6px 0 0;">{% csrf_token %}<input type="hidden" name="next" value="{% url 'book-list' %}">{% if book.pk in favorite_ids %}<button type="submit" style="font-family:inherit;font-size:14px;min-height:36px;padding:4px 12px;border-radius:10px;border:2px solid #FF8C00;background:#FF8C00;color:#fff;cursor:pointer;">♥ おきにいりちゅう</button>{% else %}<button type="submit" style="font-family:inherit;font-size:14px;min-height:36px;padding:4px 12px;border-radius:10px;border:2px solid #FF9646;background:#fff;color:#E46A1A;cursor:pointer;">♡ おきにいりする</button>{% endif %}</form>
 {% endif %}

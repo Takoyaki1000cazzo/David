@@ -1,12 +1,14 @@
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
+from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 
 from .models import Book, Favorite, ReadingProgress
+from .services import copy_book
 
 
 def visible_books(request):
@@ -87,7 +89,12 @@ def book_detail(request, pk):
     nav = next_page_info(current_no, total)
     last_page_no = None
     is_favorite = False
+    saved_page_no = None
     if request.user.is_authenticated:
+        # 「続きから読む」用: 上書き前の保存ページを保持する（表示後に現在ページで更新される）
+        existing = ReadingProgress.objects.filter(user=request.user, book=book).first()
+        if existing and total:
+            saved_page_no = max(1, min(existing.last_page_no, total))
         # 「続きから読む」用: 詳細表示時に開いているページを保存・更新する
         ReadingProgress.objects.update_or_create(
             user=request.user, book=book, defaults={'last_page_no': current_no})
@@ -107,6 +114,7 @@ def book_detail(request, pk):
         'nav': nav,
         'last_page_no': last_page_no,
         'is_favorite': is_favorite,
+        'saved_page_no': saved_page_no,
     }
     return render(request, 'books/book_detail.html', context)
 
@@ -211,3 +219,14 @@ def progress_detail(request, pk):
         'book_id': book.pk,
         'last_page_no': progress.last_page_no if progress else 1,
     })
+
+
+@login_required
+@require_POST
+def book_copy(request, pk):
+    """絵本の複製API（スタッフ専用）。複製した下書きの詳細へリダイレクトする。"""
+    if not request.user.is_staff:
+        raise PermissionDenied('スタッフのみ絵本を複製できます。')
+    book = get_object_or_404(Book.objects.prefetch_related('pages'), pk=pk)
+    new_book = copy_book(book)
+    return redirect('book-detail', pk=new_book.pk)
