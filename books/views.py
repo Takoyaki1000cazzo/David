@@ -1,3 +1,4 @@
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
@@ -123,6 +124,7 @@ def book_detail(request, pk):
         'last_page_no': last_page_no,
         'is_favorite': is_favorite,
         'saved_page_no': saved_page_no,
+        'is_draft': book.status == Book.STATUS_DRAFT,
     }
     return render(request, 'books/book_detail.html', context)
 
@@ -258,6 +260,15 @@ def _collect_validation_errors(prefix, validation_error):
     for field, messages in validation_error.message_dict.items():
         collected[f'{prefix}.{field}'] = list(messages)
     return collected
+
+
+@staff_member_required
+@require_GET
+def book_bulk_edit_form(request, pk):
+    """一括編集のHTMLフォーム画面（スタッフ専用）。保存はJSが既存APIへPOSTする。"""
+    book = get_object_or_404(Book.objects.prefetch_related('pages'), pk=pk)
+    pages = list(book.pages.all())
+    return render(request, 'books/bulk_edit.html', {'book': book, 'pages': pages})
 
 
 @require_POST

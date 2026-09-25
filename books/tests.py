@@ -1033,3 +1033,64 @@ class BookCopyTests(TestCase):
         self.assertEqual(copied.title, 'Copy Me（コピー）')
         self.assertEqual(copied.status, Book.STATUS_DRAFT)
         self.assertEqual(copied.pages.count(), 2)
+
+
+class StaffAdminUITests(TestCase):
+    """#56 管理者向けUI: 下書きプレビュー・一括編集・複製の表示と権限制御"""
+
+    def setUp(self):
+        User = get_user_model()
+        self.staff = User.objects.create_user(username='staffui', password='testpass123', is_staff=True)
+        self.user = User.objects.create_user(username='normalui', password='testpass123')
+        self.draft = Book.objects.create(title='Draft Preview Book', age_min=2, age_max=5, status=Book.STATUS_DRAFT)
+        Page.objects.create(book=self.draft, page_no=1, text_en='Draft Page One')
+        self.published = Book.objects.create(title='Published UI Book', age_min=2, age_max=5, status=Book.STATUS_PUBLISHED)
+        Page.objects.create(book=self.published, page_no=1, text_en='Page One')
+
+    def test_detail_staff_bar_for_staff_on_draft(self):
+        """スタッフの下書き詳細にはプレビューバッジ・一括編集・複製が出る"""
+        self.client.login(username='staffui', password='testpass123')
+        response = self.client.get(reverse('book-detail', args=[self.draft.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '下書きプレビュー中')
+        self.assertContains(response, reverse('book-bulk-edit-form', args=[self.draft.pk]))
+        self.assertContains(response, reverse('book-copy', args=[self.draft.pk]))
+
+    def test_detail_no_staff_bar_for_normal_user(self):
+        """一般ユーザーの詳細にはスタッフUIが出ない"""
+        self.client.login(username='normalui', password='testpass123')
+        response = self.client.get(reverse('book-detail', args=[self.published.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, '<div class="staff-bar">')
+        self.assertNotContains(response, '複製する')
+        self.assertNotContains(response, '一括編集')
+
+    def test_bulk_edit_form_staff_200(self):
+        """スタッフは一括編集画面を開ける"""
+        self.client.login(username='staffui', password='testpass123')
+        response = self.client.get(reverse('book-bulk-edit-form', args=[self.draft.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '一括編集')
+        self.assertContains(response, reverse('book-bulk-edit', args=[self.draft.pk]))
+
+    def test_bulk_edit_form_normal_user_redirected(self):
+        """一般ユーザーは一括編集画面を開けない"""
+        self.client.login(username='normalui', password='testpass123')
+        response = self.client.get(reverse('book-bulk-edit-form', args=[self.published.pk]))
+        self.assertEqual(response.status_code, 302)
+
+    def test_bulk_edit_form_anonymous_redirected(self):
+        """未ログインは一括編集画面を開けない"""
+        response = self.client.get(reverse('book-bulk-edit-form', args=[self.published.pk]))
+        self.assertEqual(response.status_code, 302)
+
+    def test_list_draft_badge_for_staff_only(self):
+        """一覧の下書きバッジはスタッフにだけ出る"""
+        self.client.login(username='staffui', password='testpass123')
+        response = self.client.get(reverse('book-list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '下書き</span>')
+        self.client.login(username='normalui', password='testpass123')
+        response = self.client.get(reverse('book-list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, '下書き</span>')
