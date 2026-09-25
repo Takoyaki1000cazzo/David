@@ -116,8 +116,15 @@
 <h1>えほんをえらんでね</h1>
 <form method="get" class="filter">
 <label>ねんれい: <input type="number" name="age" value="{{ age }}" min="0" max="12"> さい</label>
+<label>ならびかえ:
+<select name="sort" style="font-family:inherit;font-size:16px;min-height:44px;padding:6px 8px;">
+<option value="new"{% if sort == 'new' %} selected{% endif %}>あたらしいじゅん</option>
+<option value="title"{% if sort == 'title' %} selected{% endif %}>タイトルじゅん</option>
+<option value="age"{% if sort == 'age' %} selected{% endif %}>ねんれいじゅん</option>
+</select>
+</label>
 <button type="submit">しぼりこむ</button>
-{% if age %}<a href="{% url 'book-list' %}">クリア</a>{% endif %}
+{% if age or sort != 'new' %}<a href="{% url 'book-list' %}">クリア</a>{% endif %}
 </form>
 <div class="grid">
 {% for book in books %}
