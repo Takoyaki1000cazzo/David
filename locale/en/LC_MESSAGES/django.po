@@ -1,0 +1,196 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-09-26 02:51+0900\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+#: .\books\templates\books\book_detail.html:246
+msgid "← いちらんにもどる"
+msgstr "← Back to the list"
+
+#: .\books\templates\books\book_detail.html:249
+#: .\books\templates\books\book_detail.html:273
+#, python-format
+msgid "ページ %(current_no)s / %(total)s"
+msgstr "Page %(current_no)s / %(total)s"
+
+#: .\books\templates\books\book_detail.html:251
+#: .\books\templates\books\book_list.html:113
+#, python-format
+msgid "%(username)sさん"
+msgstr "%(username)s"
+
+#: .\books\templates\books\book_detail.html:252
+#: .\books\templates\books\book_list.html:115
+msgid "ログアウト"
+msgstr "Log out"
+
+#: .\books\templates\books\book_detail.html:254
+#: .\books\templates\books\book_list.html:117
+msgid "ログイン"
+msgstr "Log in"
+
+#: .\books\templates\books\book_detail.html:261
+msgid "下書きプレビュー中（一般には非公開）"
+msgstr "Draft preview (not public)"
+
+#: .\books\templates\books\book_detail.html:262
+msgid "一括編集"
+msgstr "Bulk edit"
+
+#: .\books\templates\books\book_detail.html:263
+msgid "複製する"
+msgstr "Duplicate"
+
+#: .\books\templates\books\book_detail.html:277
+#: .\books\templates\books\book_list.html:142
+#, python-format
+msgid "📖 つづきから読む (p.%(page_no)s)"
+msgstr "📖 Continue reading (p.%(page_no)s)"
+
+#: .\books\templates\books\book_detail.html:280
+msgid "ENGLISH"
+msgstr "ENGLISH"
+
+#: .\books\templates\books\book_detail.html:284
+msgid "にほんご"
+msgstr "Japanese"
+
+#: .\books\templates\books\book_detail.html:288
+msgid "▶ よみあげる"
+msgstr "▶ Read aloud"
+
+#: .\books\templates\books\book_detail.html:289
+msgid "■ とめる"
+msgstr "■ Stop"
+
+#: .\books\templates\books\book_detail.html:292
+msgid "はやさ:"
+msgstr "Speed:"
+
+#: .\books\templates\books\book_detail.html:293
+msgid "リピート"
+msgstr "Repeat"
+
+#: .\books\templates\books\book_detail.html:294
+msgid "れんぞくよみあげ"
+msgstr "Continuous reading"
+
+#: .\books\templates\books\book_detail.html:295
+msgid "にほんごをひょうじ"
+msgstr "Show Japanese"
+
+#: .\books\templates\books\book_detail.html:299
+msgid "♥ おきにいりしているよ"
+msgstr "♥ In favorites"
+
+#: .\books\templates\books\book_detail.html:299
+#: .\books\templates\books\book_list.html:144
+msgid "♡ おきにいりする"
+msgstr "♡ Add to favorites"
+
+#: .\books\templates\books\book_detail.html:300
+#, python-format
+msgid "🔖 しおりをはさむ (p.%(current_no)s)"
+msgstr "🔖 Bookmark (p.%(current_no)s)"
+
+#: .\books\templates\books\book_detail.html:303
+msgid "ログインするとおきにいり・つづきからよむがつかえます"
+msgstr "Log in to use favorites and resume reading"
+
+#: .\books\templates\books\book_detail.html:308
+msgid "＜ まえのページ"
+msgstr "＜ Previous page"
+
+#: .\books\templates\books\book_detail.html:309
+msgid "つぎのページ ＞"
+msgstr "Next page ＞"
+
+#: .\books\templates\books\book_detail.html:417
+msgid "ページがまだありません。adminで追加してください。"
+msgstr "No pages yet. Please add them via admin."
+
+#: .\books\templates\books\book_list.html:7
+msgid "David - えほんいちらん"
+msgstr "David - Picture book list"
+
+#: .\books\templates\books\book_list.html:114
+msgid "♥ おきにいり"
+msgstr "♥ Favorites"
+
+#: .\books\templates\books\book_list.html:118
+msgid "会員登録"
+msgstr "Sign up"
+
+#: .\books\templates\books\book_list.html:121
+msgid "えほんをえらんでね"
+msgstr "Choose a picture book"
+
+#: .\books\templates\books\book_list.html:123
+msgid "ねんれい:"
+msgstr "Age:"
+
+#: .\books\templates\books\book_list.html:123
+msgid "さい"
+msgstr "yrs old"
+
+#: .\books\templates\books\book_list.html:124
+msgid "ならびかえ:"
+msgstr "Sort:"
+
+#: .\books\templates\books\book_list.html:126
+msgid "あたらしいじゅん"
+msgstr "Newest"
+
+#: .\books\templates\books\book_list.html:127
+msgid "タイトルじゅん"
+msgstr "Title"
+
+#: .\books\templates\books\book_list.html:128
+msgid "ねんれいじゅん"
+msgstr "Age"
+
+#: .\books\templates\books\book_list.html:131
+msgid "しぼりこむ"
+msgstr "Filter"
+
+#: .\books\templates\books\book_list.html:132
+msgid "クリア"
+msgstr "Clear"
+
+#: .\books\templates\books\book_list.html:137
+msgid "がぞうじゅんびちゅう"
+msgstr "Image coming soon"
+
+#: .\books\templates\books\book_list.html:139
+msgid "下書き"
+msgstr "Draft"
+
+#: .\books\templates\books\book_list.html:140
+#, python-format
+msgid "たいしょうねんれい: %(age_min)s〜%(age_max)sさい"
+msgstr "Ages %(age_min)s–%(age_max)s"
+
+#: .\books\templates\books\book_list.html:144
+msgid "♥ おきにいりちゅう"
+msgstr "♥ In favorites"
+
+#: .\books\templates\books\book_list.html:149
+msgid "えほんがありません。adminで登録してください。"
+msgstr "No picture books. Please add them via admin."
+
+#: .\books\templates\books\book_list.html:153
+msgid "管理画面"
+msgstr "Admin"

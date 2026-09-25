@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="ja">
+{% load i18n %}
+<html lang="{{ LANGUAGE_CODE }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -242,24 +243,24 @@
 </head>
 <body class="font">
   <header>
-    <span><a href="{% url 'book-list' %}">← いちらんにもどる</a></span>
+    <span><a href="{% url 'book-list' %}">{% trans "← いちらんにもどる" %}</a></span>
     <strong>{{ book.title }}</strong>
     <span style="display:flex;gap:12px;align-items:center;">
-      <span>ページ {{ current_no }} / {{ total }}</span>
+      <span>{% blocktrans with current_no=current_no total=total %}ページ {{ current_no }} / {{ total }}{% endblocktrans %}</span>
       {% if user.is_authenticated %}
-      <span class="head-user">{{ user.username }}さん</span>
-      <form method="post" action="{% url 'logout' %}" style="margin:0;display:inline;">{% csrf_token %}<button type="submit" style="font-family:inherit;font-size:inherit;background:none;border:none;padding:0;color:#5A3C1E;text-decoration:none;cursor:pointer;">ログアウト</button></form>
+      <span class="head-user">{% blocktrans with username=user.username %}{{ username }}さん{% endblocktrans %}</span>
+      <form method="post" action="{% url 'logout' %}" style="margin:0;display:inline;">{% csrf_token %}<button type="submit" style="font-family:inherit;font-size:inherit;background:none;border:none;padding:0;color:#5A3C1E;text-decoration:none;cursor:pointer;">{% trans "ログアウト" %}</button></form>
       {% else %}
-      <a href="{% url 'login' %}?next={{ request.path }}">ログイン</a>
+      <a href="{% url 'login' %}?next={{ request.path }}">{% trans "ログイン" %}</a>
       {% endif %}
     </span>
   </header>
 
   {% if user.is_staff %}
   <div class="staff-bar">
-    {% if is_draft %}<span class="draft-badge">下書きプレビュー中（一般には非公開）</span>{% endif %}
-    <a href="{% url 'book-bulk-edit-form' book.pk %}">一括編集</a>
-    <form method="post" action="{% url 'book-copy' book.pk %}" style="margin:0;">{% csrf_token %}<button type="submit">複製する</button></form>
+    {% if is_draft %}<span class="draft-badge">{% trans "下書きプレビュー中（一般には非公開）" %}</span>{% endif %}
+    <a href="{% url 'book-bulk-edit-form' book.pk %}">{% trans "一括編集" %}</a>
+    <form method="post" action="{% url 'book-copy' book.pk %}" style="margin:0;">{% csrf_token %}<button type="submit">{% trans "複製する" %}</button></form>
   </div>
   {% endif %}
 
@@ -269,43 +270,43 @@
       <div class="ph">
         {% if page.image %}<img src="{{ page.image.url }}" alt="p{{ current_no }}">{% else %}<img src="/media/placeholders/no-image.png" alt="がぞうじゅんびちゅう">{% endif %}
       </div>
-      <small>ページ {{ current_no }} / {{ total }}</small>
+      <small>{% blocktrans with current_no=current_no total=total %}ページ {{ current_no }} / {{ total }}{% endblocktrans %}</small>
     </section>
     <section class="text-card">
       {% if user.is_authenticated and saved_page_no and saved_page_no != current_no %}
-      <a class="resume-banner" href="?p={{ saved_page_no }}">📖 つづきから読む (p.{{ saved_page_no }})</a>
+       <a class="resume-banner" href="?p={{ saved_page_no }}">{% blocktrans with page_no=saved_page_no %}📖 つづきから読む (p.{{ page_no }}){% endblocktrans %}</a>
       {% endif %}
       <div class="en-wrap">
-        <small>ENGLISH</small>
+        <small>{% trans "ENGLISH" %}</small>
         <div id="text-en" class="en">{{ page.text_en }}</div>
       </div>
       <div id="ja-block">
-        <small>にほんご</small>
+        <small>{% trans "にほんご" %}</small>
         <div id="text-ja" class="ja">{{ page.text_ja }}</div>
       </div>
       <div class="row">
-        <button id="speak-btn" class="btn btn-speak">▶ よみあげる</button>
-        <button id="stop-btn" class="btn btn-stop">■ とめる</button>
+        <button id="speak-btn" class="btn btn-speak">{% trans "▶ よみあげる" %}</button>
+        <button id="stop-btn" class="btn btn-stop">{% trans "■ とめる" %}</button>
       </div>
       <div class="setting">
-        <label>はやさ: <input type="range" id="rate" min="0.5" max="1.5" step="0.1" value="0.9"> <span id="rate-val">0.9</span></label>
-        <label><input type="checkbox" id="repeat"> リピート</label>
-        <label><input type="checkbox" id="continuous"> れんぞくよみあげ</label>
-        <label><input type="checkbox" id="show-ja" checked> にほんごをひょうじ</label>
+        <label>{% trans "はやさ:" %} <input type="range" id="rate" min="0.5" max="1.5" step="0.1" value="0.9"> <span id="rate-val">0.9</span></label>
+        <label><input type="checkbox" id="repeat"> {% trans "リピート" %}</label>
+        <label><input type="checkbox" id="continuous"> {% trans "れんぞくよみあげ" %}</label>
+        <label><input type="checkbox" id="show-ja" checked> {% trans "にほんごをひょうじ" %}</label>
       </div>
       {% if user.is_authenticated %}
       <div class="setting">
-        <form method="post" action="{% url 'favorite-toggle' book.pk %}" style="margin:0;">{% csrf_token %}{% if is_favorite %}<button type="submit" class="btn" style="min-height:44px;font-size:16px;background:#FF8C00;border:2px solid #FF8C00;color:#fff;">♥ おきにいりしているよ</button>{% else %}<button type="submit" class="btn" style="min-height:44px;font-size:16px;background:#fff;border:2px solid #FF9646;color:#E46A1A;">♡ おきにいりする</button>{% endif %}</form>
-        <form method="post" action="{% url 'progress-update' book.pk %}" style="margin:8px 0 0;display:flex;gap:8px;align-items:center;">{% csrf_token %}<input type="hidden" name="last_page_no" value="{{ current_no }}"><button type="submit" style="font-family:inherit;font-size:14px;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;">🔖 しおりをはさむ (p.{{ current_no }})</button></form>
+        <form method="post" action="{% url 'favorite-toggle' book.pk %}" style="margin:0;">{% csrf_token %}{% if is_favorite %}<button type="submit" class="btn" style="min-height:44px;font-size:16px;background:#FF8C00;border:2px solid #FF8C00;color:#fff;">{% trans "♥ おきにいりしているよ" %}</button>{% else %}<button type="submit" class="btn" style="min-height:44px;font-size:16px;background:#fff;border:2px solid #FF9646;color:#E46A1A;">{% trans "♡ おきにいりする" %}</button>{% endif %}</form>
+        <form method="post" action="{% url 'progress-update' book.pk %}" style="margin:8px 0 0;display:flex;gap:8px;align-items:center;">{% csrf_token %}<input type="hidden" name="last_page_no" value="{{ current_no }}"><button type="submit" style="font-family:inherit;font-size:14px;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;">{% blocktrans with current_no=current_no %}🔖 しおりをはさむ (p.{{ current_no }}){% endblocktrans %}</button></form>
       </div>
       {% else %}
-      <div class="setting"><a href="{% url 'login' %}?next={{ request.path }}">ログインするとおきにいり・つづきからよむがつかえます</a></div>
+      <div class="setting"><a href="{% url 'login' %}?next={{ request.path }}">{% trans "ログインするとおきにいり・つづきからよむがつかえます" %}</a></div>
       {% endif %}
     </section>
   </main>
   <footer>
-    {% if has_prev %}<a class="prev" href="?p={{ prev_page }}">＜ まえのページ</a>{% endif %}
-    {% if has_next %}<a class="next" href="?p={{ next_page }}">つぎのページ ＞</a>{% endif %}
+    {% if has_prev %}<a class="prev" href="?p={{ prev_page }}">{% trans "＜ まえのページ" %}</a>{% endif %}
+    {% if has_next %}<a class="next" href="?p={{ next_page }}">{% trans "つぎのページ ＞" %}</a>{% endif %}
   </footer>
   {{ nav|json_script:"page-nav" }}
   <script>
@@ -413,7 +414,7 @@
   </script>
   {% else %}
   <main class="d8-layout">
-    <p>ページがまだありません。adminで追加してください。</p>
+    <p>{% trans "ページがまだありません。adminで追加してください。" %}</p>
   </main>
   {% endif %}
   {% include "books/_credits.html" %}
