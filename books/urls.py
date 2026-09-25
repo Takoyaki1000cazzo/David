@@ -12,6 +12,7 @@ urlpatterns = [
     path('books/<int:pk>/favorite/', views.favorite_toggle, name='favorite-toggle'),
     path('books/<int:pk>/progress/', views.progress_update, name='progress-update'),
     path('books/<int:pk>/progress/detail/', views.progress_detail, name='progress-detail'),
+    path('books/<int:pk>/copy/', views.book_copy, name='book-copy'),
     path('accounts/signup/', views.signup, name='signup'),
     path('accounts/login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
     path('accounts/logout/', auth_views.LogoutView.as_view(), name='logout'),
