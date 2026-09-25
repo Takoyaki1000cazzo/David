@@ -51,20 +51,20 @@ class PageModelTests(TestCase):
 class BookViewEmptyFieldsTests(TestCase):
     def test_book_list_with_empty_description(self):
         """説明文が空でも一覧画面が表示される"""
-        book = Book.objects.create(title='Test Book', age_min=2, age_max=5)
+        book = Book.objects.create(title='Test Book', age_min=2, age_max=5, status=Book.STATUS_PUBLISHED)
         response = self.client.get(reverse('book-list'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Test Book')
 
     def test_book_list_with_empty_cover(self):
         """表紙画像が空でも一覧画面が表示される"""
-        book = Book.objects.create(title='Test Book', age_min=2, age_max=5)
+        book = Book.objects.create(title='Test Book', age_min=2, age_max=5, status=Book.STATUS_PUBLISHED)
         response = self.client.get(reverse('book-list'))
         self.assertEqual(response.status_code, 200)
 
     def test_book_detail_with_empty_fields(self):
         """説明文・表紙が空でも詳細画面が表示される"""
-        book = Book.objects.create(title='Test Book', age_min=2, age_max=5)
+        book = Book.objects.create(title='Test Book', age_min=2, age_max=5, status=Book.STATUS_PUBLISHED)
         Page.objects.create(book=book, page_no=1, text_en='Hello')
         response = self.client.get(reverse('book-detail', args=[book.pk]))
         self.assertEqual(response.status_code, 200)
@@ -72,7 +72,7 @@ class BookViewEmptyFieldsTests(TestCase):
 
     def test_book_detail_with_empty_page_image(self):
         """ページ画像が空でも詳細画面が表示される"""
-        book = Book.objects.create(title='Test Book', age_min=2, age_max=5)
+        book = Book.objects.create(title='Test Book', age_min=2, age_max=5, status=Book.STATUS_PUBLISHED)
         Page.objects.create(book=book, page_no=1, text_en='Hello', text_ja='こんにちは')
         response = self.client.get(reverse('book-detail', args=[book.pk]))
         self.assertEqual(response.status_code, 200)
@@ -83,7 +83,7 @@ class BookDetailPageValidationTests(TestCase):
     """D6: ?p= に不正値が渡されてもエラーにならず安全に動くこと"""
 
     def setUp(self):
-        self.book = Book.objects.create(title='Test Book', age_min=2, age_max=5)
+        self.book = Book.objects.create(title='Test Book', age_min=2, age_max=5, status=Book.STATUS_PUBLISHED)
         Page.objects.create(book=self.book, page_no=1, text_en='Page One')
         Page.objects.create(book=self.book, page_no=2, text_en='Page Two')
         self.url = reverse('book-detail', args=[self.book.pk])
@@ -122,7 +122,7 @@ class AutoNextPageTests(TestCase):
     """自動次ページ: 次ページ判定・最終ページ停止・範囲外の安全処理"""
 
     def setUp(self):
-        self.book = Book.objects.create(title='Next Book', age_min=2, age_max=5)
+        self.book = Book.objects.create(title='Next Book', age_min=2, age_max=5, status=Book.STATUS_PUBLISHED)
         Page.objects.create(book=self.book, page_no=1, text_en='Page One')
         Page.objects.create(book=self.book, page_no=2, text_en='Page Two')
         Page.objects.create(book=self.book, page_no=3, text_en='Page Three')
@@ -181,7 +181,7 @@ class AutoNextPageTests(TestCase):
 
     def test_book_without_pages_is_safe(self):
         """ページ無しの絵本でもエラーにならず停止信号を返す"""
-        empty = Book.objects.create(title='Empty', age_min=1, age_max=2)
+        empty = Book.objects.create(title='Empty', age_min=1, age_max=2, status=Book.STATUS_PUBLISHED)
         response = self.client.get(reverse('book-detail', args=[empty.pk]))
         self.assertEqual(response.status_code, 200)
         self.assertFalse(response.context['has_next'])
@@ -197,14 +197,14 @@ class BookViewTests(TestCase):
 
     def test_book_list_returns_200(self):
         """一覧ページ `/` は HTTP 200 を返す"""
-        Book.objects.create(title='List Check Book', age_min=3, age_max=6)
+        Book.objects.create(title='List Check Book', age_min=3, age_max=6, status=Book.STATUS_PUBLISHED)
         response = self.client.get(reverse('book-list'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'List Check Book')
 
     def test_book_detail_returns_200(self):
         """詳細ページ `/books/<id>/` は HTTP 200 を返す"""
-        book = Book.objects.create(title='Detail Check Book', age_min=3, age_max=6)
+        book = Book.objects.create(title='Detail Check Book', age_min=3, age_max=6, status=Book.STATUS_PUBLISHED)
         Page.objects.create(book=book, page_no=1, text_en='Hello')
         response = self.client.get(reverse('book-detail', args=[book.pk]))
         self.assertEqual(response.status_code, 200)
@@ -212,8 +212,8 @@ class BookViewTests(TestCase):
 
     def test_book_list_age_filter(self):
         """`/?age=4` は対象(3-6歳)のみ表示し対象外(1-2歳)を表示しない"""
-        Book.objects.create(title='Target Age Book', age_min=3, age_max=6)
-        Book.objects.create(title='Out Of Range Book', age_min=1, age_max=2)
+        Book.objects.create(title='Target Age Book', age_min=3, age_max=6, status=Book.STATUS_PUBLISHED)
+        Book.objects.create(title='Out Of Range Book', age_min=1, age_max=2, status=Book.STATUS_PUBLISHED)
         response = self.client.get(reverse('book-list'), {'age': '4'})
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Target Age Book')
@@ -289,6 +289,70 @@ class FavoriteModelTests(TestCase):
         self.assertEqual(Favorite.objects.count(), 3)
 
 
+class StatusVisibilityTests(TestCase):
+    """公開/下書きの出し分け・スタッフ権限・404制限の動作チェック"""
+
+    def setUp(self):
+        User = get_user_model()
+        self.user = User.objects.create_user(username='general', password='testpass123')
+        self.staff = User.objects.create_user(username='staff', password='testpass123', is_staff=True)
+        self.published = Book.objects.create(
+            title='Published Book', age_min=3, age_max=6, status=Book.STATUS_PUBLISHED)
+        self.draft = Book.objects.create(
+            title='Draft Book', age_min=3, age_max=6, status=Book.STATUS_DRAFT)
+
+    def test_anonymous_list_shows_only_published(self):
+        """未ログインの一覧には公開済みのみ表示する"""
+        response = self.client.get(reverse('book-list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Published Book')
+        self.assertNotContains(response, 'Draft Book')
+
+    def test_anonymous_draft_detail_returns_404(self):
+        """未ログインの下書き詳細アクセスは404を返す"""
+        response = self.client.get(reverse('book-detail', args=[self.draft.pk]))
+        self.assertEqual(response.status_code, 404)
+
+    def test_general_user_list_shows_only_published(self):
+        """一般ログインの一覧には公開済みのみ表示する"""
+        self.client.login(username='general', password='testpass123')
+        response = self.client.get(reverse('book-list'))
+        self.assertContains(response, 'Published Book')
+        self.assertNotContains(response, 'Draft Book')
+
+    def test_general_user_draft_detail_returns_404(self):
+        """一般ログインの下書き詳細アクセスは404を返す"""
+        self.client.login(username='general', password='testpass123')
+        response = self.client.get(reverse('book-detail', args=[self.draft.pk]))
+        self.assertEqual(response.status_code, 404)
+
+    def test_staff_list_shows_draft(self):
+        """スタッフの一覧には下書きも表示する（プレビュー用）"""
+        self.client.login(username='staff', password='testpass123')
+        response = self.client.get(reverse('book-list'))
+        self.assertContains(response, 'Published Book')
+        self.assertContains(response, 'Draft Book')
+
+    def test_staff_draft_detail_returns_200(self):
+        """スタッフは下書き詳細を閲覧できる"""
+        self.client.login(username='staff', password='testpass123')
+        response = self.client.get(reverse('book-detail', args=[self.draft.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Draft Book')
+
+    def test_status_filter_combines_with_age_filter(self):
+        """年齢絞り込みとステータス絞り込みが統合される"""
+        Book.objects.create(title='Draft Age Book', age_min=3, age_max=6, status=Book.STATUS_DRAFT)
+        response = self.client.get(reverse('book-list'), {'age': '4'})
+        self.assertContains(response, 'Published Book')
+        self.assertNotContains(response, 'Draft Book')
+        self.assertNotContains(response, 'Draft Age Book')
+        self.client.login(username='staff', password='testpass123')
+        response = self.client.get(reverse('book-list'), {'age': '4'})
+        self.assertContains(response, 'Published Book')
+        self.assertContains(response, 'Draft Age Book')
+
+
 class ReadingProgressViewTests(TestCase):
     """「続きから読む」: 保存・取得とアクセス制限の動作チェック"""
 
@@ -296,7 +360,7 @@ class ReadingProgressViewTests(TestCase):
         User = get_user_model()
         self.user = User.objects.create_user(username='progress1', password='testpass123')
         self.other = User.objects.create_user(username='progress2', password='testpass123')
-        self.book = Book.objects.create(title='Progress Book', age_min=2, age_max=5)
+        self.book = Book.objects.create(title='Progress Book', age_min=2, age_max=5, status=Book.STATUS_PUBLISHED)
         Page.objects.create(book=self.book, page_no=1, text_en='Page One')
         Page.objects.create(book=self.book, page_no=2, text_en='Page Two')
         Page.objects.create(book=self.book, page_no=3, text_en='Page Three')
@@ -383,8 +447,8 @@ class FavoriteViewTests(TestCase):
         User = get_user_model()
         self.user = User.objects.create_user(username='favuser', password='testpass123')
         self.other = User.objects.create_user(username='favother', password='testpass123')
-        self.book = Book.objects.create(title='Fav Book', age_min=2, age_max=5)
-        self.other_book = Book.objects.create(title='Other Fav Book', age_min=1, age_max=3)
+        self.book = Book.objects.create(title='Fav Book', age_min=2, age_max=5, status=Book.STATUS_PUBLISHED)
+        self.other_book = Book.objects.create(title='Other Fav Book', age_min=1, age_max=3, status=Book.STATUS_PUBLISHED)
 
     def test_favorite_add_requires_login(self):
         """未ログインの登録POSTはログイン画面へリダイレクトする"""
@@ -469,7 +533,7 @@ class AuthFlowTests(TestCase):
         User = get_user_model()
         self.User = User
         self.user = User.objects.create_user(username='authuser', password='testpass123')
-        self.book = Book.objects.create(title='Auth Book', age_min=2, age_max=5)
+        self.book = Book.objects.create(title='Auth Book', age_min=2, age_max=5, status=Book.STATUS_PUBLISHED)
 
     def test_signup_creates_user_and_logs_in(self):
         """POST /accounts/signup/ でユーザーが作成されログイン状態になる"""
