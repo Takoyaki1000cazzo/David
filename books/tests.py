@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import IntegrityError
+from django.forms import modelform_factory
 from django.test import TestCase
 from django.urls import reverse
 
@@ -83,6 +84,31 @@ class PageValidationTests(TestCase):
         page.image = SimpleUploadedFile('page.txt', b'hello', content_type='text/plain')
         with self.assertRaises(ValidationError):
             page.full_clean()
+
+
+class AdminFormValidationTests(TestCase):
+    """#41: adminフォーム経由でも不正入力を拒否できること"""
+
+    def test_book_form_rejects_age_over_12(self):
+        BookForm = modelform_factory(Book, fields='__all__')
+        form = BookForm(data={'title': 'Test', 'age_min': 2, 'age_max': 13, 'status': 'draft'})
+        self.assertFalse(form.is_valid())
+
+    def test_book_form_rejects_invalid_image(self):
+        BookForm = modelform_factory(Book, fields='__all__')
+        form = BookForm(
+            data={'title': 'Test', 'age_min': 2, 'age_max': 5, 'status': 'draft'},
+            files={'cover_image': SimpleUploadedFile('x.gif', b'GIF89a', content_type='image/gif')},
+        )
+        self.assertFalse(form.is_valid())
+        self.assertIn('cover_image', form.errors)
+
+    def test_page_form_rejects_empty_text_en(self):
+        book = Book.objects.create(title='Test', age_min=2, age_max=5)
+        PageForm = modelform_factory(Page, fields='__all__')
+        form = PageForm(data={'book': book.pk, 'page_no': 1, 'text_en': '   '})
+        self.assertFalse(form.is_valid())
+        self.assertIn('text_en', form.errors)
 
 
 class PageModelTests(TestCase):
