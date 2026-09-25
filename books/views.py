@@ -82,7 +82,12 @@ def book_detail(request, pk):
     current_no, total, page = resolve_page(pages, request.GET.get('p', '1'))
     nav = next_page_info(current_no, total)
     last_page_no = None
+    saved_page_no = None
     if request.user.is_authenticated:
+        # 「続きから読む」用: 上書き前の保存ページを保持する（表示後に現在ページで更新される）
+        existing = ReadingProgress.objects.filter(user=request.user, book=book).first()
+        if existing and total:
+            saved_page_no = max(1, min(existing.last_page_no, total))
         # 「続きから読む」用: 詳細表示時に開いているページを保存・更新する
         ReadingProgress.objects.update_or_create(
             user=request.user, book=book, defaults={'last_page_no': current_no})
@@ -100,6 +105,7 @@ def book_detail(request, pk):
         'next_page': nav['next_page'],
         'nav': nav,
         'last_page_no': last_page_no,
+        'saved_page_no': saved_page_no,
     }
     return render(request, 'books/book_detail.html', context)
 

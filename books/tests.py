@@ -517,6 +517,64 @@ class ReadingProgressViewTests(TestCase):
         self.assertEqual(ReadingProgress.objects.count(), 0)
 
 
+class ResumeBannerTests(TestCase):
+    """#52「続きから読む」導線: 一覧・詳細の表示チェック"""
+
+    def setUp(self):
+        User = get_user_model()
+        self.user = User.objects.create_user(username='resume1', password='testpass123')
+        self.book = Book.objects.create(title='Resume Book', age_min=2, age_max=5, status=Book.STATUS_PUBLISHED)
+        Page.objects.create(book=self.book, page_no=1, text_en='Page One')
+        Page.objects.create(book=self.book, page_no=2, text_en='Page Two')
+        Page.objects.create(book=self.book, page_no=3, text_en='Page Three')
+
+    def test_detail_shows_resume_banner_when_saved_page_differs(self):
+        """保存p.3で?p=1を開くと?p=3への再開バナーが出る"""
+        ReadingProgress.objects.create(user=self.user, book=self.book, last_page_no=3)
+        self.client.login(username='resume1', password='testpass123')
+        response = self.client.get(reverse('book-detail', args=[self.book.pk]), {'p': '1'})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'つづきから読む')
+        self.assertContains(response, '?p=3')
+
+    def test_detail_hides_resume_banner_when_same_page(self):
+        """保存ページと開いているページが同じならバナーは出ない"""
+        ReadingProgress.objects.create(user=self.user, book=self.book, last_page_no=2)
+        self.client.login(username='resume1', password='testpass123')
+        response = self.client.get(reverse('book-detail', args=[self.book.pk]), {'p': '2'})
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'つづきから読む')
+
+    def test_detail_hides_resume_banner_without_progress(self):
+        """進捗がなければバナーは出ない"""
+        self.client.login(username='resume1', password='testpass123')
+        response = self.client.get(reverse('book-detail', args=[self.book.pk]), {'p': '1'})
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'つづきから読む')
+
+    def test_detail_hides_resume_banner_for_anonymous(self):
+        """未ログインではバナーは出ない"""
+        response = self.client.get(reverse('book-detail', args=[self.book.pk]), {'p': '1'})
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'つづきから読む')
+
+    def test_list_shows_resume_button_when_progress_exists(self):
+        """一覧では進捗がある場合のみ再開ボタンが出て保存ページへ遷移できる"""
+        ReadingProgress.objects.create(user=self.user, book=self.book, last_page_no=3)
+        self.client.login(username='resume1', password='testpass123')
+        response = self.client.get(reverse('book-list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'つづきから読む')
+        self.assertContains(response, f'/books/{self.book.pk}/?p=3')
+
+    def test_list_hides_resume_button_without_progress(self):
+        """一覧では進捗がなければ再開ボタンは出ない"""
+        self.client.login(username='resume1', password='testpass123')
+        response = self.client.get(reverse('book-list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'つづきから読む')
+
+
 class FavoriteViewTests(TestCase):
     """お気に入り登録・解除・一覧取得とアクセス制限の動作チェック"""
 

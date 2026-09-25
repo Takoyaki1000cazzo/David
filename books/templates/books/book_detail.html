@@ -37,6 +37,9 @@
       flex-shrink: 0;
     }
     header a { color: #5A3C1E; text-decoration: none; }
+    header strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    header > span { flex-shrink: 0; }
+    header span { white-space: nowrap; }
     main.d8-layout {
       flex: 1;
       display: flex;
@@ -112,6 +115,18 @@
     .btn-speak { background: var(--red); color: #fff; }
     .btn-stop { background: var(--blue); color: #fff; }
     .btn:disabled { opacity: 0.5; cursor: default; }
+    .resume-banner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 52px;
+      border-radius: 14px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 20px;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
     .setting {
       font-size: 15px;
       border: 1px solid var(--line);
@@ -150,11 +165,14 @@
       .img-card .ph { min-height: 0; }
       .img-card img { max-width: 100%; max-height: 100%; height: auto; }
       .text-card { flex: 0 1 auto; gap: 8px; }
-      .text-card > div { min-height: 0; }
-      .en { font-size: 20px; padding: 8px 12px; max-height: 26vh; max-height: 26dvh; overflow-y: auto; }
-      .ja { font-size: 15px; padding: 6px 12px; max-height: 18vh; max-height: 18dvh; overflow-y: auto; }
+      /* 狭い画面で文章欄が潰れてもボタンと重ならないよう、欄ごとに内部スクロールさせる */
+      .text-card > div { min-height: 0; overflow-y: auto; }
+      .en, .ja { max-height: none; overflow-y: visible; }
+      .en { font-size: 20px; padding: 8px 12px; }
+      .ja { font-size: 15px; padding: 6px 12px; }
       .row { flex-direction: row; flex-shrink: 0; }
       .btn { min-height: 52px; font-size: 18px; width: auto; }
+      .resume-banner { min-height: 44px; font-size: 16px; }
       .setting { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; font-size: 13px; padding: 4px 8px; flex-shrink: 0; }
       footer { height: auto; flex-direction: row; gap: 12px; padding: 0 12px 8px; flex-shrink: 0; }
       footer a { font-size: 18px; min-height: 52px; }
@@ -165,6 +183,18 @@
       .en { font-size: 18px; }
       .btn { min-height: 48px; font-size: 17px; }
       footer a { min-height: 48px; font-size: 16px; }
+      .resume-banner { min-height: 38px; font-size: 14px; }
+      .text-card { gap: 6px; }
+      /* 背が低くて全てが収まらない時は文章カード内をスクロールさせる（ページ全体は固定のまま） */
+      .text-card { overflow-y: auto; }
+      /* 文章欄が完全に潰れて読めなくならないよう最低高さを保証（余りは画像側が吸収） */
+      .text-card > div.en-wrap { min-height: 84px; }
+      #ja-block { min-height: 68px; }
+    }
+    /* 小型スマホ (iPhone SE 375pxなど): ユーザー名を隠してヘッダーの切れを防ぐ */
+    @media (max-width: 600px) {
+      header { font-size: 13px; }
+      .head-user { display: none; }
     }
     /* D-10案B: 横向きの小型画面 (スマホ横・Surface Duo横720x540など) は2カラムのまま
        100vhに収め、縦スクロールなしでよみあげる/とめるを押せる配置 */
@@ -176,12 +206,15 @@
       .img-card { flex: 1; }
       .img-card .ph { min-height: 0; }
       .img-card img { max-width: 100%; max-height: 100%; }
-      .text-card { flex: 1; gap: 8px; overflow: hidden; }
-      .text-card > div { min-height: 0; }
-      .en { font-size: 16px; padding: 8px 10px; max-height: 18vh; max-height: 18dvh; overflow-y: auto; }
-      .ja { font-size: 14px; padding: 6px 10px; max-height: 20vh; overflow-y: auto; }
+      .text-card { flex: 1; gap: 6px; overflow-y: auto; }
+      /* 高さが足りない横持ち小型画面は右カラム全体をスクロールさせる */
+      .text-card > div { min-height: auto; overflow: visible; }
+      .en, .ja { max-height: none; overflow-y: visible; }
+      .en { font-size: 16px; padding: 8px 10px; }
+      .ja { font-size: 14px; padding: 6px 10px; }
       .row { flex-direction: row; flex-shrink: 0; }
-      .btn { min-height: 48px; font-size: 18px; width: auto; }
+      .btn { min-height: 44px; font-size: 16px; width: auto; }
+      .resume-banner { min-height: 36px; font-size: 13px; }
       .setting { display: flex; flex-wrap: wrap; gap: 2px 8px; align-items: center; font-size: 12px; padding: 4px 8px; flex-shrink: 0; }
       .setting input[type="range"] { max-width: 90px; }
       footer { height: auto; flex-direction: row; gap: 12px; padding: 0 12px 8px; }
@@ -196,7 +229,7 @@
     <span style="display:flex;gap:12px;align-items:center;">
       <span>ページ {{ current_no }} / {{ total }}</span>
       {% if user.is_authenticated %}
-      <span>{{ user.username }}さん</span>
+      <span class="head-user">{{ user.username }}さん</span>
       <form method="post" action="{% url 'logout' %}" style="margin:0;">{% csrf_token %}<button type="submit" style="font-family:inherit;font-size:13px;padding:4px 10px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;">ログアウト</button></form>
       {% else %}
       <a href="{% url 'login' %}?next={{ request.path }}">ログイン</a>
@@ -213,7 +246,10 @@
       <small>ページ {{ current_no }} / {{ total }}</small>
     </section>
     <section class="text-card">
-      <div>
+      {% if user.is_authenticated and saved_page_no and saved_page_no != current_no %}
+      <a class="resume-banner" href="?p={{ saved_page_no }}">📖 つづきから読む (p.{{ saved_page_no }})</a>
+      {% endif %}
+      <div class="en-wrap">
         <small>ENGLISH</small>
         <div id="text-en" class="en">{{ page.text_en }}</div>
       </div>
@@ -233,7 +269,7 @@
       {% if user.is_authenticated %}
       <div class="setting">
         <form method="post" action="{% url 'favorite-toggle' book.pk %}" style="margin:0;">{% csrf_token %}<button type="submit" class="btn" style="min-height:44px;font-size:16px;background:#fff;border:2px solid #FF9646;color:#E46A1A;">♥ お気に入り</button></form>
-        <form method="post" action="{% url 'progress-update' book.pk %}" style="margin:8px 0 0;display:flex;gap:8px;align-items:center;">{% csrf_token %}<input type="hidden" name="last_page_no" value="{{ current_no }}"><button type="submit" style="font-family:inherit;font-size:14px;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;">ここまで読んだを保存 (p.{{ current_no }})</button></form>
+        <form method="post" action="{% url 'progress-update' book.pk %}" style="margin:8px 0 0;display:flex;gap:8px;align-items:center;">{% csrf_token %}<input type="hidden" name="last_page_no" value="{{ current_no }}"><button type="submit" style="font-family:inherit;font-size:14px;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;">🔖 しおりをはさむ (p.{{ current_no }})</button></form>
       </div>
       {% else %}
       <div class="setting"><a href="{% url 'login' %}?next={{ request.path }}">ログインするとお気に入り・続きから読むが使えます</a></div>
