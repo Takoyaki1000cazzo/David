@@ -1,7 +1,7 @@
 from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.files.base import ContentFile
 from django.db import transaction
 from django.http import JsonResponse
@@ -16,6 +16,7 @@ from io import BytesIO
 from PIL import Image
 
 from .models import Book, Favorite, Page, ReadingProgress
+from .services import copy_book
 
 
 def visible_books(request):
@@ -91,7 +92,12 @@ def book_detail(request, pk):
     current_no, total, page = resolve_page(pages, request.GET.get('p', '1'))
     nav = next_page_info(current_no, total)
     last_page_no = None
+    saved_page_no = None
     if request.user.is_authenticated:
+        # 「続きから読む」用: 上書き前の保存ページを保持する（表示後に現在ページで更新される）
+        existing = ReadingProgress.objects.filter(user=request.user, book=book).first()
+        if existing and total:
+            saved_page_no = max(1, min(existing.last_page_no, total))
         # 「続きから読む」用: 詳細表示時に開いているページを保存・更新する
         ReadingProgress.objects.update_or_create(
             user=request.user, book=book, defaults={'last_page_no': current_no})
@@ -109,6 +115,7 @@ def book_detail(request, pk):
         'next_page': nav['next_page'],
         'nav': nav,
         'last_page_no': last_page_no,
+        'saved_page_no': saved_page_no,
     }
     return render(request, 'books/book_detail.html', context)
 
@@ -384,3 +391,14 @@ def book_bulk_edit(request, pk):
         'updated_pages': sorted(updated_pages),
         'created_pages': sorted(created_pages),
     })
+
+
+@login_required
+@require_POST
+def book_copy(request, pk):
+    """絵本の複製API（スタッフ専用）。複製した下書きの詳細へリダイレクトする。"""
+    if not request.user.is_staff:
+        raise PermissionDenied('スタッフのみ絵本を複製できます。')
+    book = get_object_or_404(Book.objects.prefetch_related('pages'), pk=pk)
+    new_book = copy_book(book)
+    return redirect('book-detail', pk=new_book.pk)
