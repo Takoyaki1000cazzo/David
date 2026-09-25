@@ -7,9 +7,12 @@ __pycache__/
 media/*
 !media/.gitkeep
 !media/pages/
+!media/covers/
+!media/placeholders/
+media/covers/*
+!media/covers/cover.png
+media/pages/*
 !media/pages/page1.png
 !media/pages/page2.png
-!media/covers/
-!media/covers/cover.png
-!media/placeholders/
+media/placeholders/*
 !media/placeholders/no-image.png
