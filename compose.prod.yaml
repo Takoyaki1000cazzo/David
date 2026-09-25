@@ -1,0 +1,13 @@
+# 本番用上書きファイル
+# 使い方: docker compose -f compose.yaml -f compose.prod.yaml up -d --build
+# 開発用 compose.yaml の web 起動方法だけを gunicorn に置き換える
+
+services:
+  web:
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3"
+    environment:
+      DEBUG: "False"
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:?本番では ALLOWED_HOSTS を .env に設定してください}
