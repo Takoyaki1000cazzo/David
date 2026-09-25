@@ -93,6 +93,9 @@
       max-height: 34vh;
       overflow-y: auto;
     }
+    /* #55: 単語クリック用。ホバーで分かるように下線＋背景 */
+    .en .w { cursor: pointer; border-radius: 6px; }
+    .en .w:hover { text-decoration: underline; background: #FFF3D6; }
     .ja {
       font-size: 18px;
       color: #555;
@@ -264,6 +267,7 @@
       <div class="setting">
         <label>はやさ: <input type="range" id="rate" min="0.5" max="1.5" step="0.1" value="0.9"> <span id="rate-val">0.9</span></label>
         <label><input type="checkbox" id="repeat"> リピート</label>
+        <label><input type="checkbox" id="continuous"> れんぞくよみあげ</label>
         <label><input type="checkbox" id="show-ja" checked> にほんごをひょうじ</label>
       </div>
       {% if user.is_authenticated %}
@@ -287,11 +291,14 @@
   const rateInput = document.getElementById('rate');
   const rateVal = document.getElementById('rate-val');
   const repeatBox = document.getElementById('repeat');
+  const continuousBox = document.getElementById('continuous');
   const showJaBox = document.getElementById('show-ja');
   const jaBlock = document.getElementById('ja-block');
   const enText = document.getElementById('text-en');
+  const navData = JSON.parse(document.getElementById('page-nav').textContent);
   const RATE_KEY = 'david-rate';
   const SHOW_JA_KEY = 'david-show-ja';
+  const CONTINUOUS_KEY = 'david-continuous';
   try {
     const saved = localStorage.getItem(RATE_KEY);
     if (saved !== null) { rateInput.value = saved; }
@@ -310,28 +317,75 @@
     jaBlock.style.display = showJaBox.checked ? '' : 'none';
     try { localStorage.setItem(SHOW_JA_KEY, showJaBox.checked ? '1' : '0'); } catch (e) {}
   });
+  // #50: 連続読み聞かせトグル（localStorageに保存）
+  try {
+    const savedContinuous = localStorage.getItem(CONTINUOUS_KEY);
+    if (savedContinuous !== null) { continuousBox.checked = savedContinuous === '1'; }
+  } catch (e) {}
+  continuousBox.addEventListener('change', () => {
+    try { localStorage.setItem(CONTINUOUS_KEY, continuousBox.checked ? '1' : '0'); } catch (e) {}
+  });
+  // #55: 英文を単語spanに分割。全体読み上げ用に原文を保持する
+  const fullText = enText.textContent;
+  enText.innerHTML = '';
+  fullText.split(/(\s+)/).forEach((part) => {
+    if (part === '' || /^\s+$/.test(part)) {
+      enText.appendChild(document.createTextNode(part));
+      return;
+    }
+    const s = document.createElement('span');
+    s.className = 'w';
+    s.textContent = part;
+    s.addEventListener('click', (e) => { e.stopPropagation(); speakWord(part); });
+    enText.appendChild(s);
+  });
   function setSpeaking(speaking) {
     btn.disabled = speaking;
     btn.textContent = speaking ? 'よみあげ中…' : '▶ よみあげる';
   }
-  function speak() {
-    if (!('speechSynthesis' in window)) { alert('このブラウザは読み上げに対応していません'); return; }
-    speechSynthesis.cancel();
-    const text = document.getElementById('text-en').textContent;
+  function pickVoice() {
+    const voices = speechSynthesis.getVoices();
+    return voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en')) || null;
+  }
+  // 世代トークン: cancel()に伴う古い発話のonend/onerrorでの次ページ遷移を防ぐ
+  let speakToken = 0;
+  function makeUtterance(text, token, advance) {
     const u = new SpeechSynthesisUtterance(text);
     u.lang = 'en-US';
     u.rate = parseFloat(rateInput.value);
-    const voices = speechSynthesis.getVoices();
-    const en = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('en'));
-    if (en) u.voice = en;
-    u.onstart = () => setSpeaking(true);
-    u.onend = () => { if (repeatBox.checked) { speak(); return; } setSpeaking(false); };
-    u.onerror = () => setSpeaking(false);
-    speechSynthesis.speak(u);
+    const voice = pickVoice();
+    if (voice) u.voice = voice;
+    u.onstart = () => { if (token === speakToken) setSpeaking(true); };
+    u.onend = () => {
+      if (token !== speakToken) return;
+      if (!advance) { setSpeaking(false); return; }
+      if (repeatBox.checked) { speak(); return; }
+      // #50: 連続ONかつ次ページありなら自動遷移、最終ページでは停止
+      if (continuousBox.checked && navData.has_next && navData.next_page) {
+        window.location.href = '?p=' + navData.next_page;
+        return;
+      }
+      setSpeaking(false);
+    };
+    u.onerror = () => { if (token === speakToken) setSpeaking(false); };
+    return u;
+  }
+  function speak() {
+    if (!('speechSynthesis' in window)) { alert('このブラウザは読み上げに対応していません'); return; }
+    const token = ++speakToken;
+    speechSynthesis.cancel();
+    speechSynthesis.speak(makeUtterance(fullText, token, true));
+  }
+  // #55: 単語だけ読み上げる。全体読み上げ・連続遷移とは競合させずcancelする
+  function speakWord(word) {
+    if (!('speechSynthesis' in window)) { alert('このブラウザは読み上げに対応していません'); return; }
+    const token = ++speakToken;
+    speechSynthesis.cancel();
+    speechSynthesis.speak(makeUtterance(word, token, false));
   }
   btn.addEventListener('click', speak);
   enText.addEventListener('click', speak);
-  stopBtn.addEventListener('click', () => { speechSynthesis.cancel(); setSpeaking(false); });
+  stopBtn.addEventListener('click', () => { speakToken++; speechSynthesis.cancel(); setSpeaking(false); });
   if (typeof speechSynthesis !== 'undefined') speechSynthesis.getVoices();
   </script>
   {% else %}
