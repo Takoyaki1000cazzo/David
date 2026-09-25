@@ -79,10 +79,14 @@ def book_list(request):
         }
         for book in books:
             book.resume_page_no = progress_map.get(book.pk)
+        favorite_ids = set(
+            Favorite.objects.filter(user=request.user, book__in=books).values_list('book_id', flat=True)
+        )
     else:
         for book in books:
             book.resume_page_no = None
-    return render(request, 'books/book_list.html', {'books': books, 'age': request.GET.get('age', '')})
+        favorite_ids = set()
+    return render(request, 'books/book_list.html', {'books': books, 'age': request.GET.get('age', ''), 'favorite_ids': favorite_ids})
 
 
 def book_detail(request, pk):
@@ -92,6 +96,7 @@ def book_detail(request, pk):
     current_no, total, page = resolve_page(pages, request.GET.get('p', '1'))
     nav = next_page_info(current_no, total)
     last_page_no = None
+    is_favorite = False
     saved_page_no = None
     if request.user.is_authenticated:
         # 「続きから読む」用: 上書き前の保存ページを保持する（表示後に現在ページで更新される）
@@ -102,6 +107,7 @@ def book_detail(request, pk):
         ReadingProgress.objects.update_or_create(
             user=request.user, book=book, defaults={'last_page_no': current_no})
         last_page_no = current_no
+        is_favorite = Favorite.objects.filter(user=request.user, book=book).exists()
     context = {
         'book': book,
         'page': page,
@@ -115,6 +121,7 @@ def book_detail(request, pk):
         'next_page': nav['next_page'],
         'nav': nav,
         'last_page_no': last_page_no,
+        'is_favorite': is_favorite,
         'saved_page_no': saved_page_no,
     }
     return render(request, 'books/book_detail.html', context)
