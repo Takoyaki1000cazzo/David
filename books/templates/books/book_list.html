@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="ja">
+{% load i18n %}
+<html lang="{{ LANGUAGE_CODE }}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>David - えほんいちらん</title>
+<title>{% trans "David - えほんいちらん" %}</title>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@700&display=swap" rel="stylesheet">
 <style>
   * { box-sizing: border-box; }
@@ -109,47 +110,47 @@
 <div class="container">
 <nav style="display:flex;gap:12px;align-items:center;justify-content:flex-end;font-size:14px;">
 {% if user.is_authenticated %}
-<span>{{ user.username }}さん</span>
-<a href="{% url 'favorite-list' %}" style="font-size:14px;color:#5A3C1E;">♥ おきにいり</a>
-<form method="post" action="{% url 'logout' %}" style="margin:0;display:inline;">{% csrf_token %}<button type="submit" style="background:none;border:none;padding:0;font-family:inherit;font-size:14px;color:#5A3C1E;text-decoration:underline;cursor:pointer;">ログアウト</button></form>
+<span>{% blocktrans with username=user.username %}{{ username }}さん{% endblocktrans %}</span>
+<a href="{% url 'favorite-list' %}" style="font-size:14px;color:#5A3C1E;">{% trans "♥ おきにいり" %}</a>
+<form method="post" action="{% url 'logout' %}" style="margin:0;display:inline;">{% csrf_token %}<button type="submit" style="background:none;border:none;padding:0;font-family:inherit;font-size:14px;color:#5A3C1E;text-decoration:underline;cursor:pointer;">{% trans "ログアウト" %}</button></form>
 {% else %}
-<a href="{% url 'login' %}">ログイン</a>
-<a href="{% url 'signup' %}">会員登録</a>
+<a href="{% url 'login' %}">{% trans "ログイン" %}</a>
+<a href="{% url 'signup' %}">{% trans "会員登録" %}</a>
 {% endif %}
 </nav>
-<h1>えほんをえらんでね</h1>
+<h1>{% trans "えほんをえらんでね" %}</h1>
 <form method="get" class="filter">
-<label>ねんれい: <input type="number" name="age" value="{{ age }}" min="0" max="12"> さい</label>
-<label>ならびかえ:
+<label>{% trans "ねんれい:" %} <input type="number" name="age" value="{{ age }}" min="0" max="12"> {% trans "さい" %}</label>
+<label>{% trans "ならびかえ:" %}
 <select name="sort" style="font-family:inherit;font-size:16px;min-height:44px;padding:6px 8px;">
-<option value="new"{% if sort == 'new' %} selected{% endif %}>あたらしいじゅん</option>
-<option value="title"{% if sort == 'title' %} selected{% endif %}>タイトルじゅん</option>
-<option value="age"{% if sort == 'age' %} selected{% endif %}>ねんれいじゅん</option>
+<option value="new"{% if sort == 'new' %} selected{% endif %}>{% trans "あたらしいじゅん" %}</option>
+<option value="title"{% if sort == 'title' %} selected{% endif %}>{% trans "タイトルじゅん" %}</option>
+<option value="age"{% if sort == 'age' %} selected{% endif %}>{% trans "ねんれいじゅん" %}</option>
 </select>
 </label>
-<button type="submit">しぼりこむ</button>
-{% if age or sort != 'new' %}<a href="{% url 'book-list' %}">クリア</a>{% endif %}
+<button type="submit">{% trans "しぼりこむ" %}</button>
+{% if age or sort != 'new' %}<a href="{% url 'book-list' %}">{% trans "クリア" %}</a>{% endif %}
 </form>
 <div class="grid">
 {% for book in books %}
 <div class="card">
-{% if book.cover_image %}<img src="{{ book.cover_image.url }}" alt="{{ book.title }}">{% else %}<img src="/media/placeholders/no-image.png" alt="がぞうじゅんびちゅう">{% endif %}
+{% if book.cover_image %}<img src="{{ book.cover_image.url }}" alt="{{ book.title }}">{% else %}<img src="/media/placeholders/no-image.png" alt="{% trans "がぞうじゅんびちゅう" %}">{% endif %}
 <div class="info">
-<strong><a href="{% url 'book-detail' book.pk %}">{{ book.title }}</a></strong>{% if user.is_staff and book.status == 'draft' %} <span class="draft-badge">下書き</span>{% endif %}<br>
-たいしょうねんれい: {{ book.age_min }}〜{{ book.age_max }}さい<br>
+<strong><a href="{% url 'book-detail' book.pk %}">{{ book.title }}</a></strong>{% if user.is_staff and book.status == 'draft' %} <span class="draft-badge">{% trans "下書き" %}</span>{% endif %}<br>
+{% blocktrans with age_min=book.age_min age_max=book.age_max %}たいしょうねんれい: {{ age_min }}〜{{ age_max }}さい{% endblocktrans %}<br>
 {{ book.description_ja|default:book.description|truncatewords:20 }}<br>
-{% if user.is_authenticated and book.resume_page_no %}<br><a href="{% url 'book-detail' book.pk %}?p={{ book.resume_page_no }}" style="display:inline-block;margin-top:6px;padding:6px 14px;border-radius:10px;background:#FF8C00;color:#fff;text-decoration:none;">📖 つづきから読む (p.{{ book.resume_page_no }})</a>{% endif %}
+{% if user.is_authenticated and book.resume_page_no %}<br><a href="{% url 'book-detail' book.pk %}?p={{ book.resume_page_no }}" style="display:inline-block;margin-top:6px;padding:6px 14px;border-radius:10px;background:#FF8C00;color:#fff;text-decoration:none;">{% blocktrans with page_no=book.resume_page_no %}📖 つづきから読む (p.{{ page_no }}){% endblocktrans %}</a>{% endif %}
 {% if user.is_authenticated %}
-<form method="post" action="{% url 'favorite-toggle' book.pk %}" style="margin:6px 0 0;">{% csrf_token %}<input type="hidden" name="next" value="{% url 'book-list' %}">{% if book.pk in favorite_ids %}<button type="submit" style="font-family:inherit;font-size:14px;min-height:36px;padding:4px 12px;border-radius:10px;border:2px solid #FF8C00;background:#FF8C00;color:#fff;cursor:pointer;">♥ おきにいりちゅう</button>{% else %}<button type="submit" style="font-family:inherit;font-size:14px;min-height:36px;padding:4px 12px;border-radius:10px;border:2px solid #FF9646;background:#fff;color:#E46A1A;cursor:pointer;">♡ おきにいりする</button>{% endif %}</form>
+<form method="post" action="{% url 'favorite-toggle' book.pk %}" style="margin:6px 0 0;">{% csrf_token %}<input type="hidden" name="next" value="{% url 'book-list' %}">{% if book.pk in favorite_ids %}<button type="submit" style="font-family:inherit;font-size:14px;min-height:36px;padding:4px 12px;border-radius:10px;border:2px solid #FF8C00;background:#FF8C00;color:#fff;cursor:pointer;">{% trans "♥ おきにいりちゅう" %}</button>{% else %}<button type="submit" style="font-family:inherit;font-size:14px;min-height:36px;padding:4px 12px;border-radius:10px;border:2px solid #FF9646;background:#fff;color:#E46A1A;cursor:pointer;">{% trans "♡ おきにいりする" %}</button>{% endif %}</form>
 {% endif %}
 </div>
 </div>
 {% empty %}
-<p>えほんがありません。adminで登録してください。</p>
+<p>{% trans "えほんがありません。adminで登録してください。" %}</p>
 {% endfor %}
 </div>
 <hr>
-<p><a href="/admin/">管理画面</a></p>
+<p><a href="/admin/">{% trans "管理画面" %}</a></p>
 {% include "books/_credits.html" %}
 </div>
 </body>
