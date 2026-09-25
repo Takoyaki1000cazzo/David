@@ -1,9 +1,12 @@
+from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import UserCreationForm
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.decorators.http import require_GET, require_POST
+from django.urls import reverse
+from django.views.decorators.http import require_GET, require_POST, require_http_methods
 
-from .models import Book, ReadingProgress
+from .models import Book, Favorite, ReadingProgress
 
 
 def book_list(request):
@@ -65,6 +68,57 @@ def _parse_page_no(request):
     return max(1, page_no)
 
 
+def _safe_redirect(request, default_name, **kwargs):
+    next_url = request.POST.get('next') or request.GET.get('next')
+    if next_url and next_url.startswith('/'):
+        return redirect(next_url)
+    return redirect(default_name, **kwargs)
+
+
+def signup(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect('book-list')
+    else:
+        form = UserCreationForm()
+    return render(request, 'registration/signup.html', {'form': form})
+
+
+@login_required
+def favorite_list(request):
+    favorites = Favorite.objects.filter(user=request.user).select_related('book').order_by('-created_at')
+    return render(request, 'books/favorite_list.html', {'favorites': favorites})
+
+
+@login_required
+@require_POST
+def favorite_add(request, pk):
+    book = get_object_or_404(Book, pk=pk)
+    Favorite.objects.get_or_create(user=request.user, book=book)
+    return _safe_redirect(request, 'book-detail', pk=book.pk)
+
+
+@login_required
+@require_http_methods(['POST', 'DELETE'])
+def favorite_remove(request, pk):
+    book = get_object_or_404(Book, pk=pk)
+    Favorite.objects.filter(user=request.user, book=book).delete()
+    return _safe_redirect(request, 'favorite-list')
+
+
+@login_required
+@require_POST
+def favorite_toggle(request, pk):
+    book = get_object_or_404(Book, pk=pk)
+    favorite, created = Favorite.objects.get_or_create(user=request.user, book=book)
+    if not created:
+        favorite.delete()
+    return _safe_redirect(request, 'book-detail', pk=book.pk)
+
+
 @login_required
 @require_POST
 def progress_update(request, pk):
@@ -75,7 +129,7 @@ def progress_update(request, pk):
     next_url = request.POST.get('next') or request.GET.get('next')
     if next_url and next_url.startswith('/'):
         return redirect(next_url)
-    return redirect(f'/books/{book.pk}/?p={last_page_no}')
+    return redirect(f"{reverse('book-detail', args=[book.pk])}?p={last_page_no}")
 
 
 @login_required
