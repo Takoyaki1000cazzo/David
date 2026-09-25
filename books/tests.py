@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import IntegrityError
+from django.forms import modelform_factory
 from django.test import TestCase
 from django.urls import reverse
 
@@ -32,6 +34,81 @@ class BookModelTests(TestCase):
             status=Book.STATUS_PUBLISHED)
         book.full_clean()
         self.assertEqual(book.status, Book.STATUS_PUBLISHED)
+
+
+class BookValidationTests(TestCase):
+    """#41: 年齢の範囲と画像バリデーション"""
+
+    def test_age_over_12_raises_validation_error(self):
+        book = Book(title='Test', age_min=2, age_max=13)
+        with self.assertRaises(ValidationError):
+            book.full_clean()
+
+    def test_age_min_over_12_raises_validation_error(self):
+        book = Book(title='Test', age_min=13, age_max=13)
+        with self.assertRaises(ValidationError):
+            book.full_clean()
+
+    def test_invalid_image_extension_raises_validation_error(self):
+        book = Book(title='Test', age_min=2, age_max=5)
+        book.cover_image = SimpleUploadedFile('cover.gif', b'GIF89a', content_type='image/gif')
+        with self.assertRaises(ValidationError):
+            book.full_clean()
+
+    def test_oversized_image_raises_validation_error(self):
+        book = Book(title='Test', age_min=2, age_max=5)
+        big = b'\x89PNG\r\n' + b'0' * (5 * 1024 * 1024 + 1)
+        book.cover_image = SimpleUploadedFile('cover.png', big, content_type='image/png')
+        with self.assertRaises(ValidationError):
+            book.full_clean()
+
+    def test_valid_image_passes(self):
+        book = Book(title='Test', age_min=2, age_max=5)
+        book.cover_image = SimpleUploadedFile('cover.png', b'\x89PNG\r\n', content_type='image/png')
+        book.full_clean()
+
+
+class PageValidationTests(TestCase):
+    """#41: 英文必須とページ画像バリデーション"""
+
+    def setUp(self):
+        self.book = Book.objects.create(title='Test', age_min=2, age_max=5)
+
+    def test_empty_text_en_raises_validation_error(self):
+        page = Page(book=self.book, page_no=1, text_en='   ')
+        with self.assertRaises(ValidationError):
+            page.full_clean()
+
+    def test_invalid_image_extension_raises_validation_error(self):
+        page = Page(book=self.book, page_no=1, text_en='Hello')
+        page.image = SimpleUploadedFile('page.txt', b'hello', content_type='text/plain')
+        with self.assertRaises(ValidationError):
+            page.full_clean()
+
+
+class AdminFormValidationTests(TestCase):
+    """#41: adminフォーム経由でも不正入力を拒否できること"""
+
+    def test_book_form_rejects_age_over_12(self):
+        BookForm = modelform_factory(Book, fields='__all__')
+        form = BookForm(data={'title': 'Test', 'age_min': 2, 'age_max': 13, 'status': 'draft'})
+        self.assertFalse(form.is_valid())
+
+    def test_book_form_rejects_invalid_image(self):
+        BookForm = modelform_factory(Book, fields='__all__')
+        form = BookForm(
+            data={'title': 'Test', 'age_min': 2, 'age_max': 5, 'status': 'draft'},
+            files={'cover_image': SimpleUploadedFile('x.gif', b'GIF89a', content_type='image/gif')},
+        )
+        self.assertFalse(form.is_valid())
+        self.assertIn('cover_image', form.errors)
+
+    def test_page_form_rejects_empty_text_en(self):
+        book = Book.objects.create(title='Test', age_min=2, age_max=5)
+        PageForm = modelform_factory(Page, fields='__all__')
+        form = PageForm(data={'book': book.pk, 'page_no': 1, 'text_en': '   '})
+        self.assertFalse(form.is_valid())
+        self.assertIn('text_en', form.errors)
 
 
 class PageModelTests(TestCase):
