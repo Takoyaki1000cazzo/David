@@ -1,12 +1,17 @@
+import json
+import shutil
+import tempfile
+
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import IntegrityError
 from django.forms import modelform_factory
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from .models import Book, Favorite, Page, ReadingProgress
+from .services import copy_book
 
 
 class BookModelTests(TestCase):
@@ -517,6 +522,64 @@ class ReadingProgressViewTests(TestCase):
         self.assertEqual(ReadingProgress.objects.count(), 0)
 
 
+class ResumeBannerTests(TestCase):
+    """#52「続きから読む」導線: 一覧・詳細の表示チェック"""
+
+    def setUp(self):
+        User = get_user_model()
+        self.user = User.objects.create_user(username='resume1', password='testpass123')
+        self.book = Book.objects.create(title='Resume Book', age_min=2, age_max=5, status=Book.STATUS_PUBLISHED)
+        Page.objects.create(book=self.book, page_no=1, text_en='Page One')
+        Page.objects.create(book=self.book, page_no=2, text_en='Page Two')
+        Page.objects.create(book=self.book, page_no=3, text_en='Page Three')
+
+    def test_detail_shows_resume_banner_when_saved_page_differs(self):
+        """保存p.3で?p=1を開くと?p=3への再開バナーが出る"""
+        ReadingProgress.objects.create(user=self.user, book=self.book, last_page_no=3)
+        self.client.login(username='resume1', password='testpass123')
+        response = self.client.get(reverse('book-detail', args=[self.book.pk]), {'p': '1'})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'つづきから読む')
+        self.assertContains(response, '?p=3')
+
+    def test_detail_hides_resume_banner_when_same_page(self):
+        """保存ページと開いているページが同じならバナーは出ない"""
+        ReadingProgress.objects.create(user=self.user, book=self.book, last_page_no=2)
+        self.client.login(username='resume1', password='testpass123')
+        response = self.client.get(reverse('book-detail', args=[self.book.pk]), {'p': '2'})
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'つづきから読む')
+
+    def test_detail_hides_resume_banner_without_progress(self):
+        """進捗がなければバナーは出ない"""
+        self.client.login(username='resume1', password='testpass123')
+        response = self.client.get(reverse('book-detail', args=[self.book.pk]), {'p': '1'})
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'つづきから読む')
+
+    def test_detail_hides_resume_banner_for_anonymous(self):
+        """未ログインではバナーは出ない"""
+        response = self.client.get(reverse('book-detail', args=[self.book.pk]), {'p': '1'})
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'つづきから読む')
+
+    def test_list_shows_resume_button_when_progress_exists(self):
+        """一覧では進捗がある場合のみ再開ボタンが出て保存ページへ遷移できる"""
+        ReadingProgress.objects.create(user=self.user, book=self.book, last_page_no=3)
+        self.client.login(username='resume1', password='testpass123')
+        response = self.client.get(reverse('book-list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'つづきから読む')
+        self.assertContains(response, f'/books/{self.book.pk}/?p=3')
+
+    def test_list_hides_resume_button_without_progress(self):
+        """一覧では進捗がなければ再開ボタンは出ない"""
+        self.client.login(username='resume1', password='testpass123')
+        response = self.client.get(reverse('book-list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'つづきから読む')
+
+
 class FavoriteViewTests(TestCase):
     """お気に入り登録・解除・一覧取得とアクセス制限の動作チェック"""
 
@@ -601,6 +664,63 @@ class FavoriteViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Fav Book')
         self.assertNotContains(response, 'Other Fav Book')
+
+
+class FavoriteUITests(TestCase):
+    """#51 お気に入りUI: 登録/解除の切替表示と一覧導線のチェック"""
+
+    def setUp(self):
+        User = get_user_model()
+        self.user = User.objects.create_user(username='favui', password='testpass123')
+        self.book = Book.objects.create(title='Fav UI Book', age_min=2, age_max=5, status=Book.STATUS_PUBLISHED)
+        Page.objects.create(book=self.book, page_no=1, text_en='Page One')
+
+    def test_detail_shows_register_button_when_not_favorited(self):
+        """未登録なら「おきにいりする」と出る"""
+        self.client.login(username='favui', password='testpass123')
+        response = self.client.get(reverse('book-detail', args=[self.book.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'おきにいりする')
+        self.assertNotContains(response, 'おきにいりしているよ')
+
+    def test_detail_shows_registered_button_when_favorited(self):
+        """登録済みなら「おきにいりしているよ」と出る"""
+        Favorite.objects.create(user=self.user, book=self.book)
+        self.client.login(username='favui', password='testpass123')
+        response = self.client.get(reverse('book-detail', args=[self.book.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'おきにいりしているよ')
+        self.assertNotContains(response, 'おきにいりする')
+
+    def test_detail_login_prompt_for_anonymous(self):
+        """未ログインの詳細ではボタンではなくログイン誘導が出る"""
+        response = self.client.get(reverse('book-detail', args=[self.book.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'ログインするとおきにいり')
+        self.assertNotContains(response, 'おきにいりする')
+        self.assertNotContains(response, 'おきにいりしているよ')
+
+    def test_list_shows_favorite_buttons_when_logged_in(self):
+        """一覧ではログイン時に登録ボタンと一覧への導線が出る"""
+        self.client.login(username='favui', password='testpass123')
+        response = self.client.get(reverse('book-list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'おきにいり')
+        self.assertContains(response, reverse('favorite-list'))
+
+    def test_list_shows_registered_state(self):
+        """一覧では登録済みの本に「おきにいりちゅう」と出る"""
+        Favorite.objects.create(user=self.user, book=self.book)
+        self.client.login(username='favui', password='testpass123')
+        response = self.client.get(reverse('book-list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'おきにいりちゅう')
+
+    def test_list_hides_favorite_buttons_for_anonymous(self):
+        """一覧では未ログイン時にお気に入りボタンは出ない"""
+        response = self.client.get(reverse('book-list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'おきにいり')
 
 
 class AuthFlowTests(TestCase):
@@ -689,3 +809,227 @@ class AuthFlowTests(TestCase):
         progress.refresh_from_db()
         self.assertEqual(progress.last_page_no, 5)
         self.assertEqual(ReadingProgress.objects.count(), 1)
+
+
+
+
+class BookBulkEditTests(TestCase):
+    """一括更新API: 正常更新・ロールバック・権限の動作チェック"""
+
+    GIF = (
+        b'GIF89a\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00'
+        b'\xff\xff\xff!\xf9\x04\x00\x00\x00\x00\x00,\x00\x00\x00\x00'
+        b'\x01\x00\x01\x00\x00\x02\x02D\x01\x00;'
+    )
+
+    def setUp(self):
+        self.media_root = tempfile.mkdtemp()
+        self.override = override_settings(MEDIA_ROOT=self.media_root)
+        self.override.enable()
+        self.addCleanup(self.override.disable)
+        self.addCleanup(shutil.rmtree, self.media_root, True)
+        User = get_user_model()
+        self.staff = User.objects.create_user(username='bulkstaff', password='testpass123', is_staff=True)
+        self.user = User.objects.create_user(username='bulkuser', password='testpass123')
+        self.book = Book.objects.create(
+            title='Bulk Book', age_min=2, age_max=5, status=Book.STATUS_DRAFT)
+        self.page1 = Page.objects.create(book=self.book, page_no=1, text_en='One', text_ja='いち')
+        self.page2 = Page.objects.create(book=self.book, page_no=2, text_en='Two', text_ja='に')
+        self.url = reverse('book-bulk-edit', args=[self.book.pk])
+
+    def post_json(self, payload):
+        return self.client.post(self.url, data=json.dumps(payload), content_type='application/json')
+
+    def test_staff_valid_bulk_update(self):
+        """スタッフが正しいデータで一括更新するとDBが更新される"""
+        self.client.login(username='bulkstaff', password='testpass123')
+        response = self.post_json({
+            'book': {'title': 'Bulk Updated', 'age_min': 3, 'age_max': 6, 'status': 'published'},
+            'pages': [
+                {'page_no': 1, 'text_en': 'One Updated', 'text_ja': 'いち更新'},
+                {'page_no': 2, 'text_en': 'Two', 'audio_url': 'https://example.com/a.mp3'},
+                {'page_no': 3, 'text_en': 'Three New', 'text_ja': 'さん'},
+            ],
+        })
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['book_id'], self.book.pk)
+        self.assertEqual(sorted(data['updated_pages']), [1, 2])
+        self.assertEqual(data['created_pages'], [3])
+        self.book.refresh_from_db()
+        self.assertEqual((self.book.title, self.book.age_min, self.book.age_max, self.book.status),
+                         ('Bulk Updated', 3, 6, Book.STATUS_PUBLISHED))
+        self.assertEqual(Page.objects.get(book=self.book, page_no=1).text_en, 'One Updated')
+        self.assertEqual(Page.objects.get(book=self.book, page_no=2).audio_url, 'https://example.com/a.mp3')
+        self.assertEqual(Page.objects.filter(book=self.book).count(), 3)
+
+    def test_validation_error_rolls_back_everything(self):
+        """不整合があれば一部も含めて更新されず400を返す"""
+        self.client.login(username='bulkstaff', password='testpass123')
+        response = self.post_json({
+            'book': {'title': 'Should Not Save'},
+            'pages': [
+                {'page_no': 1, 'text_en': 'Should Not Save Either'},
+                {'page_no': 1, 'text_en': 'Duplicate page_no'},
+            ],
+        })
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('errors', response.json())
+        self.book.refresh_from_db()
+        self.assertEqual(self.book.title, 'Bulk Book')
+        self.assertEqual(Page.objects.get(pk=self.page1.pk).text_en, 'One')
+        self.assertEqual(Page.objects.filter(book=self.book).count(), 2)
+
+    def test_invalid_age_range_rolls_back(self):
+        """age_min > age_max は検証エラーとなり何も更新されない"""
+        self.client.login(username='bulkstaff', password='testpass123')
+        response = self.post_json({
+            'book': {'age_min': 6, 'age_max': 3},
+            'pages': [{'page_no': 2, 'text_en': 'Should Not Save'}],
+        })
+        self.assertEqual(response.status_code, 400)
+        self.book.refresh_from_db()
+        self.assertEqual((self.book.age_min, self.book.age_max), (2, 5))
+        self.assertEqual(Page.objects.get(pk=self.page2.pk).text_en, 'Two')
+
+    def test_anonymous_returns_401(self):
+        """未ログインは401になる"""
+        response = self.post_json({'book': {'title': 'Nope'}})
+        self.assertEqual(response.status_code, 401)
+        self.book.refresh_from_db()
+        self.assertEqual(self.book.title, 'Bulk Book')
+
+    def test_general_user_returns_403(self):
+        """一般ユーザーは403になる"""
+        self.client.login(username='bulkuser', password='testpass123')
+        response = self.post_json({'book': {'title': 'Nope'}})
+        self.assertEqual(response.status_code, 403)
+        self.book.refresh_from_db()
+        self.assertEqual(self.book.title, 'Bulk Book')
+
+    def test_image_update_via_multipart(self):
+        """multipartでページ画像を一括更新できる"""
+        self.client.login(username='bulkstaff', password='testpass123')
+        response = self.client.post(self.url, {
+            'payload': json.dumps({'pages': [{'page_no': 1, 'text_en': 'One'}]}),
+            'page_image_1': SimpleUploadedFile('p1.gif', self.GIF, 'image/gif'),
+        })
+        self.assertEqual(response.status_code, 200)
+        page = Page.objects.get(pk=self.page1.pk)
+        self.assertTrue(page.image.name)
+        with page.image.open('rb') as f:
+            self.assertEqual(f.read(), self.GIF)
+
+    def test_invalid_image_returns_400_without_update(self):
+        """画像として読めないファイルは400となり何も更新されない"""
+        self.client.login(username='bulkstaff', password='testpass123')
+        response = self.client.post(self.url, {
+            'payload': json.dumps({'pages': [{'page_no': 1, 'text_en': 'Should Not Save'}]}),
+            'page_image_1': SimpleUploadedFile('p1.txt', b'not an image', 'text/plain'),
+        })
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(Page.objects.get(pk=self.page1.pk).text_en, 'One')
+
+
+class BookCopyTests(TestCase):
+    """絵本の複製: Book+Pageの作成・タイトル・status・独立性・画像複製"""
+
+    def setUp(self):
+        self.media_root = tempfile.mkdtemp()
+        self.override = override_settings(MEDIA_ROOT=self.media_root)
+        self.override.enable()
+        self.addCleanup(self.override.disable)
+        self.addCleanup(shutil.rmtree, self.media_root, True)
+        User = get_user_model()
+        self.staff = User.objects.create_user(username='copystaff', password='testpass123', is_staff=True)
+        self.user = User.objects.create_user(username='copyuser', password='testpass123')
+        self.book = Book.objects.create(
+            title='Copy Me', age_min=2, age_max=5,
+            status=Book.STATUS_PUBLISHED, description='desc', description_ja='せつめい')
+        Page.objects.create(book=self.book, page_no=1, text_en='One', text_ja='いち')
+        Page.objects.create(book=self.book, page_no=2, text_en='Two', text_ja='に')
+
+    def test_copy_creates_new_book_and_pages(self):
+        """コピー実行で新しいBookと全Pageが作成される"""
+        new_book = copy_book(self.book)
+        self.assertEqual(Book.objects.count(), 2)
+        self.assertEqual(new_book.pages.count(), 2)
+        self.assertEqual(
+            list(new_book.pages.order_by('page_no').values_list('page_no', 'text_en', flat=False)),
+            [(1, 'One'), (2, 'Two')])
+        self.assertEqual(new_book.age_min, 2)
+        self.assertEqual(new_book.description_ja, 'せつめい')
+
+    def test_copy_title_and_status(self):
+        """タイトル末尾に「（コピー）」、statusはdraftになる"""
+        new_book = copy_book(self.book)
+        self.assertEqual(new_book.title, 'Copy Me（コピー）')
+        self.assertEqual(new_book.status, Book.STATUS_DRAFT)
+        self.assertIsNone(new_book.published_at)
+
+    def test_copy_is_independent(self):
+        """元のBook/PageとIDが異なり独立している"""
+        new_book = copy_book(self.book)
+        self.assertNotEqual(new_book.pk, self.book.pk)
+        old_page_ids = set(self.book.pages.values_list('pk', flat=True))
+        new_page_ids = set(new_book.pages.values_list('pk', flat=True))
+        self.assertTrue(new_page_ids)
+        self.assertFalse(old_page_ids & new_page_ids)
+        new_book.title = 'Changed'
+        new_book.save()
+        self.book.refresh_from_db()
+        self.assertEqual(self.book.title, 'Copy Me')
+
+    def test_copy_duplicates_images(self):
+        """画像ファイルも複製され参照が分かれる"""
+        gif = (
+            b'GIF89a\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00'
+            b'\xff\xff\xff!\xf9\x04\x00\x00\x00\x00\x00,\x00\x00\x00\x00'
+            b'\x01\x00\x01\x00\x00\x02\x02D\x01\x00;'
+        )
+        book = Book.objects.create(title='Img Book', age_min=1, age_max=3)
+        book.cover_image.save('cover.gif', SimpleUploadedFile('cover.gif', gif, 'image/gif'), save=True)
+        page = Page.objects.create(book=book, page_no=1, text_en='Hi')
+        page.image.save('p1.gif', SimpleUploadedFile('p1.gif', gif, 'image/gif'), save=True)
+        new_book = copy_book(book)
+        self.assertNotEqual(new_book.cover_image.name, book.cover_image.name)
+        new_page = new_book.pages.get(page_no=1)
+        self.assertNotEqual(new_page.image.name, page.image.name)
+        with new_book.cover_image.open('rb') as f:
+            self.assertEqual(f.read(), gif)
+        with new_page.image.open('rb') as f:
+            self.assertEqual(f.read(), gif)
+
+    def test_copy_view_requires_staff(self):
+        """複製APIはスタッフのみ実行できる"""
+        url = reverse('book-copy', args=[self.book.pk])
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse('login'), response.url)
+        self.client.login(username='copyuser', password='testpass123')
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(Book.objects.count(), 1)
+        self.client.login(username='copystaff', password='testpass123')
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Book.objects.count(), 2)
+        copied = Book.objects.exclude(pk=self.book.pk).get()
+        self.assertEqual(copied.title, 'Copy Me（コピー）')
+        self.assertEqual(copied.status, Book.STATUS_DRAFT)
+
+    def test_admin_action_duplicates_books(self):
+        """Admin Actionから複製できる"""
+        admin_user = get_user_model().objects.create_superuser(
+            username='copyadmin', password='testpass123', email='a@example.com')
+        self.client.force_login(admin_user)
+        response = self.client.post(reverse('admin:books_book_changelist'), {
+            'action': 'duplicate_books',
+            '_selected_action': [str(self.book.pk)],
+        }, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Book.objects.count(), 2)
+        copied = Book.objects.exclude(pk=self.book.pk).get()
+        self.assertEqual(copied.title, 'Copy Me（コピー）')
+        self.assertEqual(copied.status, Book.STATUS_DRAFT)
+        self.assertEqual(copied.pages.count(), 2)
