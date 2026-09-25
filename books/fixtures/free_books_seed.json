@@ -1,0 +1,542 @@
+[
+  {
+    "model": "books.book",
+    "pk": 10,
+    "fields": {
+      "title": "I Can Climb!",
+      "cover_image": null,
+      "age_min": 2,
+      "age_max": 5,
+      "description": "A little boy learns to climb up. But can he climb down?",
+      "description_ja": "「のぼる／おりる」のくり返し。動作語の読み聞かせに最適です。",
+      "status": "published",
+      "published_at": "2026-09-21T00:00:00Z",
+      "created_at": "2026-09-21T00:00:00Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 100,
+    "fields": {
+      "book": 10,
+      "page_no": 1,
+      "text_en": "I can climb up.",
+      "text_ja": "のぼれるよ。",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:00:01Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 101,
+    "fields": {
+      "book": 10,
+      "page_no": 2,
+      "text_en": "I can climb down.",
+      "text_ja": "おりられるよ。",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:00:02Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 102,
+    "fields": {
+      "book": 10,
+      "page_no": 3,
+      "text_en": "Up and down, up and down!",
+      "text_ja": "のぼって、おりて、のぼって、おりて！",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:00:03Z"
+    }
+  },
+  {
+    "model": "books.book",
+    "pk": 11,
+    "fields": {
+      "title": "My Friends",
+      "cover_image": null,
+      "age_min": 2,
+      "age_max": 5,
+      "description": "I have many friends. One of them is really special!",
+      "description_ja": "短い自己紹介文の連続。子どもが真似しやすい絵本です。",
+      "status": "published",
+      "published_at": "2026-09-21T00:00:10Z",
+      "created_at": "2026-09-21T00:00:10Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 110,
+    "fields": {
+      "book": 11,
+      "page_no": 1,
+      "text_en": "I am Sam.",
+      "text_ja": "ぼくはサムだよ。",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:00:11Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 111,
+    "fields": {
+      "book": 11,
+      "page_no": 2,
+      "text_en": "This is my friend.",
+      "text_ja": "こちらは友だち。",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:00:12Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 112,
+    "fields": {
+      "book": 11,
+      "page_no": 3,
+      "text_en": "We play together.",
+      "text_ja": "いっしょに遊ぶよ。",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:00:13Z"
+    }
+  },
+  {
+    "model": "books.book",
+    "pk": 12,
+    "fields": {
+      "title": "Fat King Thin Dog",
+      "cover_image": null,
+      "age_min": 2,
+      "age_max": 5,
+      "description": "Run along with the Fat King after the Thin Dog!",
+      "description_ja": "追いかけっこのリズム文。いっしょに声を出して盛り上がれます。",
+      "status": "published",
+      "published_at": "2026-09-21T00:00:20Z",
+      "created_at": "2026-09-21T00:00:20Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 120,
+    "fields": {
+      "book": 12,
+      "page_no": 1,
+      "text_en": "Run, run, Fat King!",
+      "text_ja": "はしれ、はしれ、ふとった王さま！",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:00:21Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 121,
+    "fields": {
+      "book": 12,
+      "page_no": 2,
+      "text_en": "Run, run, Thin Dog!",
+      "text_ja": "はしれ、はしれ、ほそい犬！",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:00:22Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 122,
+    "fields": {
+      "book": 12,
+      "page_no": 3,
+      "text_en": "Run and run and run!",
+      "text_ja": "はしって、はしって、はしって！",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:00:23Z"
+    }
+  },
+  {
+    "model": "books.book",
+    "pk": 13,
+    "fields": {
+      "title": "My Best Friend",
+      "cover_image": null,
+      "age_min": 2,
+      "age_max": 5,
+      "description": "Would you like to have a very special friend?",
+      "description_ja": "「とくべつな友だちは？」の問いかけ型。読みながら会話が生まれます。",
+      "status": "published",
+      "published_at": "2026-09-21T00:00:30Z",
+      "created_at": "2026-09-21T00:00:30Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 130,
+    "fields": {
+      "book": 13,
+      "page_no": 1,
+      "text_en": "Who is my best friend?",
+      "text_ja": "いちばんの友だちはだれかな？",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:00:31Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 131,
+    "fields": {
+      "book": 13,
+      "page_no": 2,
+      "text_en": "My best friend is you!",
+      "text_ja": "いちばんの友だちはきみだよ！",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:00:32Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 132,
+    "fields": {
+      "book": 13,
+      "page_no": 3,
+      "text_en": "Yes, you!",
+      "text_ja": "そう、きみだよ！",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:00:33Z"
+    }
+  },
+  {
+    "model": "books.book",
+    "pk": 14,
+    "fields": {
+      "title": "The Moon and The Cap",
+      "cover_image": null,
+      "age_min": 2,
+      "age_max": 5,
+      "description": "Do you like to wear a cap on a sunny day?",
+      "description_ja": "帽子をめぐるやさしいお話。語彙が少なく初めての絵本にぴったり。",
+      "status": "published",
+      "published_at": "2026-09-21T00:00:40Z",
+      "created_at": "2026-09-21T00:00:40Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 140,
+    "fields": {
+      "book": 14,
+      "page_no": 1,
+      "text_en": "The cap is on the chair.",
+      "text_ja": "ぼうしが、いすのうえにあるよ。",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:00:41Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 141,
+    "fields": {
+      "book": 14,
+      "page_no": 2,
+      "text_en": "The moon shines above.",
+      "text_ja": "つきが、うえでかがやいているよ。",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:00:42Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 142,
+    "fields": {
+      "book": 14,
+      "page_no": 3,
+      "text_en": "Good night, cap. Good night, moon.",
+      "text_ja": "おやすみ、ぼうし。おやすみ、おつきさま。",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:00:43Z"
+    }
+  },
+  {
+    "model": "books.book",
+    "pk": 15,
+    "fields": {
+      "title": "Curly and Straight",
+      "cover_image": null,
+      "age_min": 2,
+      "age_max": 5,
+      "description": "Do you like curly tails or straight tails?",
+      "description_ja": "「くるくる／まっすぐ」の対比。擬態語のようにリズミカルに読めます。",
+      "status": "published",
+      "published_at": "2026-09-21T00:00:50Z",
+      "created_at": "2026-09-21T00:00:50Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 150,
+    "fields": {
+      "book": 15,
+      "page_no": 1,
+      "text_en": "A curly tail.",
+      "text_ja": "くるくるのしっぽ。",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:00:51Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 151,
+    "fields": {
+      "book": 15,
+      "page_no": 2,
+      "text_en": "A straight tail.",
+      "text_ja": "まっすぐなしっぽ。",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:00:52Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 152,
+    "fields": {
+      "book": 15,
+      "page_no": 3,
+      "text_en": "Which one do you like?",
+      "text_ja": "どっちがすき？",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:00:53Z"
+    }
+  },
+  {
+    "model": "books.book",
+    "pk": 16,
+    "fields": {
+      "title": "I Can Make Things!",
+      "cover_image": null,
+      "age_min": 2,
+      "age_max": 5,
+      "description": "A boy who can make many things.",
+      "description_ja": "「できること」の列挙型。2〜5歳向けの前向きな絵本です。",
+      "status": "published",
+      "published_at": "2026-09-21T00:01:00Z",
+      "created_at": "2026-09-21T00:01:00Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 160,
+    "fields": {
+      "book": 16,
+      "page_no": 1,
+      "text_en": "I can make a house.",
+      "text_ja": "おうちが作れるよ。",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:01:01Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 161,
+    "fields": {
+      "book": 16,
+      "page_no": 2,
+      "text_en": "I can make a boat.",
+      "text_ja": "ふねも作れるよ。",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:01:02Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 162,
+    "fields": {
+      "book": 16,
+      "page_no": 3,
+      "text_en": "I can make anything!",
+      "text_ja": "なんでも作れるよ！",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:01:03Z"
+    }
+  },
+  {
+    "model": "books.book",
+    "pk": 17,
+    "fields": {
+      "title": "I Like to Read",
+      "cover_image": null,
+      "age_min": 2,
+      "age_max": 5,
+      "description": "A boy wants to read a book to someone.",
+      "description_ja": "読書そのものがテーマ。読み聞かせの導入にぴったり。",
+      "status": "published",
+      "published_at": "2026-09-21T00:01:10Z",
+      "created_at": "2026-09-21T00:01:10Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 170,
+    "fields": {
+      "book": 17,
+      "page_no": 1,
+      "text_en": "I like to read.",
+      "text_ja": "本を読むのが好きだよ。",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:01:11Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 171,
+    "fields": {
+      "book": 17,
+      "page_no": 2,
+      "text_en": "I read to my cat.",
+      "text_ja": "ねこに読んであげるよ。",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:01:12Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 172,
+    "fields": {
+      "book": 17,
+      "page_no": 3,
+      "text_en": "Read with me!",
+      "text_ja": "いっしょに読もう！",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:01:13Z"
+    }
+  },
+  {
+    "model": "books.book",
+    "pk": 18,
+    "fields": {
+      "title": "Did You Hear?",
+      "cover_image": null,
+      "age_min": 2,
+      "age_max": 5,
+      "description": "Did you hear the bird sing? A sound-based story.",
+      "description_ja": "鳥の鳴き声・音の絵本。音まね遊びにぴったり。",
+      "status": "published",
+      "published_at": "2026-09-21T00:01:20Z",
+      "created_at": "2026-09-21T00:01:20Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 180,
+    "fields": {
+      "book": 18,
+      "page_no": 1,
+      "text_en": "Did you hear the bird?",
+      "text_ja": "鳥の声がきこえた？",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:01:21Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 181,
+    "fields": {
+      "book": 18,
+      "page_no": 2,
+      "text_en": "Tweet! Tweet!",
+      "text_ja": "ちゅん、ちゅん！",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:01:22Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 182,
+    "fields": {
+      "book": 18,
+      "page_no": 3,
+      "text_en": "Did you hear it too?",
+      "text_ja": "きみもきこえた？",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:01:23Z"
+    }
+  },
+  {
+    "model": "books.book",
+    "pk": 19,
+    "fields": {
+      "title": "Smile Please!",
+      "cover_image": null,
+      "age_min": 2,
+      "age_max": 5,
+      "description": "A cheerful story about smiling together.",
+      "description_ja": "笑顔をめぐる短編。表情遊びと連動して楽しめます。",
+      "status": "published",
+      "published_at": "2026-09-21T00:01:30Z",
+      "created_at": "2026-09-21T00:01:30Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 190,
+    "fields": {
+      "book": 19,
+      "page_no": 1,
+      "text_en": "Smile, smile, smile!",
+      "text_ja": "にこにこ、わらって！",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:01:31Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 191,
+    "fields": {
+      "book": 19,
+      "page_no": 2,
+      "text_en": "You look happy.",
+      "text_ja": "たのしそうだね。",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:01:32Z"
+    }
+  },
+  {
+    "model": "books.page",
+    "pk": 192,
+    "fields": {
+      "book": 19,
+      "page_no": 3,
+      "text_en": "We smile together.",
+      "text_ja": "いっしょにわらおう。",
+      "image": null,
+      "audio_url": null,
+      "created_at": "2026-09-21T00:01:33Z"
+    }
+  }
+]
