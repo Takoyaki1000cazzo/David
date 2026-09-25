@@ -71,6 +71,14 @@ def book_list(request):
     if age and age.isdigit():
         age = int(age)
         books = books.filter(age_min__lte=age, age_max__gte=age)
+    sort = request.GET.get('sort', 'new')
+    if sort == 'title':
+        books = books.order_by('title')
+    elif sort == 'age':
+        books = books.order_by('age_min', 'age_max')
+    else:
+        sort = 'new'
+        books = books.order_by('-created_at')
     books = list(books)
     if request.user.is_authenticated:
         progress_map = {
@@ -82,7 +90,7 @@ def book_list(request):
     else:
         for book in books:
             book.resume_page_no = None
-    return render(request, 'books/book_list.html', {'books': books, 'age': request.GET.get('age', '')})
+    return render(request, 'books/book_list.html', {'books': books, 'age': request.GET.get('age', ''), 'sort': sort})
 
 
 def book_detail(request, pk):

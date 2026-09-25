@@ -1,3 +1,4 @@
+import datetime
 import json
 import shutil
 import tempfile
@@ -300,6 +301,58 @@ class BookViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Target Age Book')
         self.assertNotContains(response, 'Out Of Range Book')
+
+
+class BookListSortTests(TestCase):
+    """#54 一覧の並び替え: タイトル順・年齢順・新着順と絞り込み併用"""
+
+    def setUp(self):
+        from django.utils import timezone
+        base = timezone.now()
+        self.zebra = Book.objects.create(title='Zebra Book', age_min=0, age_max=1, status=Book.STATUS_PUBLISHED)
+        self.apple = Book.objects.create(title='Apple Book', age_min=0, age_max=2, status=Book.STATUS_PUBLISHED)
+        self.mango = Book.objects.create(title='Mango Book', age_min=3, age_max=6, status=Book.STATUS_PUBLISHED)
+        Book.objects.filter(pk=self.zebra.pk).update(created_at=base - datetime.timedelta(days=3))
+        Book.objects.filter(pk=self.apple.pk).update(created_at=base - datetime.timedelta(days=2))
+        Book.objects.filter(pk=self.mango.pk).update(created_at=base - datetime.timedelta(days=1))
+
+    def _titles(self, response):
+        return [book.title for book in response.context['books']]
+
+    def test_default_order_is_newest_first(self):
+        """未指定は新着順（Mango → Apple → Zebra）"""
+        response = self.client.get(reverse('book-list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self._titles(response), ['Mango Book', 'Apple Book', 'Zebra Book'])
+
+    def test_sort_title(self):
+        """sort=title はタイトル順"""
+        response = self.client.get(reverse('book-list'), {'sort': 'title'})
+        self.assertEqual(self._titles(response), ['Apple Book', 'Mango Book', 'Zebra Book'])
+
+    def test_sort_age(self):
+        """sort=age は年齢順（age_min, age_max）"""
+        response = self.client.get(reverse('book-list'), {'sort': 'age'})
+        self.assertEqual(self._titles(response), ['Zebra Book', 'Apple Book', 'Mango Book'])
+
+    def test_sort_invalid_falls_back_to_newest(self):
+        """不正値は新着順にフォールバックする"""
+        response = self.client.get(reverse('book-list'), {'sort': 'hoge'})
+        self.assertEqual(response.context['sort'], 'new')
+        self.assertEqual(self._titles(response), ['Mango Book', 'Apple Book', 'Zebra Book'])
+
+    def test_sort_combines_with_age_filter(self):
+        """年齢絞り込みと併用できる（age=1 は Apple・Zebra のみ）"""
+        response = self.client.get(reverse('book-list'), {'age': '1', 'sort': 'title'})
+        self.assertEqual(self._titles(response), ['Apple Book', 'Zebra Book'])
+        response = self.client.get(reverse('book-list'), {'age': '1', 'sort': 'age'})
+        self.assertEqual(self._titles(response), ['Zebra Book', 'Apple Book'])
+
+    def test_sort_select_shows_current(self):
+        """切替UIで現在の並び順が選択状態になる"""
+        response = self.client.get(reverse('book-list'), {'sort': 'title'})
+        self.assertContains(response, '<select name="sort"')
+        self.assertContains(response, '<option value="title" selected>')
 
 
 class ReadingProgressModelTests(TestCase):
