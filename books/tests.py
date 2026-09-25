@@ -603,6 +603,63 @@ class FavoriteViewTests(TestCase):
         self.assertNotContains(response, 'Other Fav Book')
 
 
+class FavoriteUITests(TestCase):
+    """#51 お気に入りUI: 登録/解除の切替表示と一覧導線のチェック"""
+
+    def setUp(self):
+        User = get_user_model()
+        self.user = User.objects.create_user(username='favui', password='testpass123')
+        self.book = Book.objects.create(title='Fav UI Book', age_min=2, age_max=5, status=Book.STATUS_PUBLISHED)
+        Page.objects.create(book=self.book, page_no=1, text_en='Page One')
+
+    def test_detail_shows_register_button_when_not_favorited(self):
+        """未登録なら「おきにいりする」と出る"""
+        self.client.login(username='favui', password='testpass123')
+        response = self.client.get(reverse('book-detail', args=[self.book.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'おきにいりする')
+        self.assertNotContains(response, 'おきにいりしているよ')
+
+    def test_detail_shows_registered_button_when_favorited(self):
+        """登録済みなら「おきにいりしているよ」と出る"""
+        Favorite.objects.create(user=self.user, book=self.book)
+        self.client.login(username='favui', password='testpass123')
+        response = self.client.get(reverse('book-detail', args=[self.book.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'おきにいりしているよ')
+        self.assertNotContains(response, 'おきにいりする')
+
+    def test_detail_login_prompt_for_anonymous(self):
+        """未ログインの詳細ではボタンではなくログイン誘導が出る"""
+        response = self.client.get(reverse('book-detail', args=[self.book.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'ログインするとおきにいり')
+        self.assertNotContains(response, 'おきにいりする')
+        self.assertNotContains(response, 'おきにいりしているよ')
+
+    def test_list_shows_favorite_buttons_when_logged_in(self):
+        """一覧ではログイン時に登録ボタンと一覧への導線が出る"""
+        self.client.login(username='favui', password='testpass123')
+        response = self.client.get(reverse('book-list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'おきにいり')
+        self.assertContains(response, reverse('favorite-list'))
+
+    def test_list_shows_registered_state(self):
+        """一覧では登録済みの本に「おきにいりちゅう」と出る"""
+        Favorite.objects.create(user=self.user, book=self.book)
+        self.client.login(username='favui', password='testpass123')
+        response = self.client.get(reverse('book-list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'おきにいりちゅう')
+
+    def test_list_hides_favorite_buttons_for_anonymous(self):
+        """一覧では未ログイン時にお気に入りボタンは出ない"""
+        response = self.client.get(reverse('book-list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'おきにいり')
+
+
 class AuthFlowTests(TestCase):
     """サインアップ〜ログイン〜ログアウトとアクセス制限の一通りの動作チェック"""
 
