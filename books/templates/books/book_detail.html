@@ -230,7 +230,7 @@
       <span>ページ {{ current_no }} / {{ total }}</span>
       {% if user.is_authenticated %}
       <span class="head-user">{{ user.username }}さん</span>
-      <form method="post" action="{% url 'logout' %}" style="margin:0;">{% csrf_token %}<button type="submit" style="font-family:inherit;font-size:13px;padding:4px 10px;border-radius:8px;border:1px solid var(--line);background:#fff;cursor:pointer;">ログアウト</button></form>
+      <form method="post" action="{% url 'logout' %}" style="margin:0;display:inline;">{% csrf_token %}<button type="submit" style="font-family:inherit;font-size:inherit;background:none;border:none;padding:0;color:#5A3C1E;text-decoration:none;cursor:pointer;">ログアウト</button></form>
       {% else %}
       <a href="{% url 'login' %}?next={{ request.path }}">ログイン</a>
       {% endif %}
