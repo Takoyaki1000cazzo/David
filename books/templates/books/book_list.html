@@ -72,6 +72,10 @@
   }
   .card strong { font-size: 18px; }
   .card a { color: #5A3C1E; }
+  .draft-badge {
+    display: inline-block; background: #7E57C2; color: #fff; border-radius: 8px;
+    padding: 1px 8px; font-size: 12px; white-space: nowrap; vertical-align: middle;
+  }
   .card .info { margin-top: 8px; }
   /* D-10: 作品が1つのときは全幅・横並びカードにして1画面に収める */
   .grid > :only-child { grid-column: 1 / -1; display: flex; gap: 16px; align-items: flex-start; }
@@ -131,7 +135,7 @@
 <div class="card">
 {% if book.cover_image %}<img src="{{ book.cover_image.url }}" alt="{{ book.title }}">{% else %}<img src="/media/placeholders/no-image.png" alt="がぞうじゅんびちゅう">{% endif %}
 <div class="info">
-<strong><a href="{% url 'book-detail' book.pk %}">{{ book.title }}</a></strong><br>
+<strong><a href="{% url 'book-detail' book.pk %}">{{ book.title }}</a></strong>{% if user.is_staff and book.status == 'draft' %} <span class="draft-badge">下書き</span>{% endif %}<br>
 たいしょうねんれい: {{ book.age_min }}〜{{ book.age_max }}さい<br>
 {{ book.description_ja|default:book.description|truncatewords:20 }}<br>
 {% if user.is_authenticated and book.resume_page_no %}<br><a href="{% url 'book-detail' book.pk %}?p={{ book.resume_page_no }}" style="display:inline-block;margin-top:6px;padding:6px 14px;border-radius:10px;background:#FF8C00;color:#fff;text-decoration:none;">📖 つづきから読む (p.{{ book.resume_page_no }})</a>{% endif %}
