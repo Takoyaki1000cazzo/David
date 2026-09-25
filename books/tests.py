@@ -1,12 +1,16 @@
+import shutil
+import tempfile
+
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import IntegrityError
 from django.forms import modelform_factory
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from .models import Book, Favorite, Page, ReadingProgress
+from .services import copy_book
 
 
 class BookModelTests(TestCase):
@@ -747,3 +751,107 @@ class AuthFlowTests(TestCase):
         progress.refresh_from_db()
         self.assertEqual(progress.last_page_no, 5)
         self.assertEqual(ReadingProgress.objects.count(), 1)
+
+
+class BookCopyTests(TestCase):
+    """絵本の複製: Book+Pageの作成・タイトル・status・独立性・画像複製"""
+
+    def setUp(self):
+        self.media_root = tempfile.mkdtemp()
+        self.override = override_settings(MEDIA_ROOT=self.media_root)
+        self.override.enable()
+        self.addCleanup(self.override.disable)
+        self.addCleanup(shutil.rmtree, self.media_root, True)
+        User = get_user_model()
+        self.staff = User.objects.create_user(username='copystaff', password='testpass123', is_staff=True)
+        self.user = User.objects.create_user(username='copyuser', password='testpass123')
+        self.book = Book.objects.create(
+            title='Copy Me', age_min=2, age_max=5,
+            status=Book.STATUS_PUBLISHED, description='desc', description_ja='せつめい')
+        Page.objects.create(book=self.book, page_no=1, text_en='One', text_ja='いち')
+        Page.objects.create(book=self.book, page_no=2, text_en='Two', text_ja='に')
+
+    def test_copy_creates_new_book_and_pages(self):
+        """コピー実行で新しいBookと全Pageが作成される"""
+        new_book = copy_book(self.book)
+        self.assertEqual(Book.objects.count(), 2)
+        self.assertEqual(new_book.pages.count(), 2)
+        self.assertEqual(
+            list(new_book.pages.order_by('page_no').values_list('page_no', 'text_en', flat=False)),
+            [(1, 'One'), (2, 'Two')])
+        self.assertEqual(new_book.age_min, 2)
+        self.assertEqual(new_book.description_ja, 'せつめい')
+
+    def test_copy_title_and_status(self):
+        """タイトル末尾に「（コピー）」、statusはdraftになる"""
+        new_book = copy_book(self.book)
+        self.assertEqual(new_book.title, 'Copy Me（コピー）')
+        self.assertEqual(new_book.status, Book.STATUS_DRAFT)
+        self.assertIsNone(new_book.published_at)
+
+    def test_copy_is_independent(self):
+        """元のBook/PageとIDが異なり独立している"""
+        new_book = copy_book(self.book)
+        self.assertNotEqual(new_book.pk, self.book.pk)
+        old_page_ids = set(self.book.pages.values_list('pk', flat=True))
+        new_page_ids = set(new_book.pages.values_list('pk', flat=True))
+        self.assertTrue(new_page_ids)
+        self.assertFalse(old_page_ids & new_page_ids)
+        new_book.title = 'Changed'
+        new_book.save()
+        self.book.refresh_from_db()
+        self.assertEqual(self.book.title, 'Copy Me')
+
+    def test_copy_duplicates_images(self):
+        """画像ファイルも複製され参照が分かれる"""
+        gif = (
+            b'GIF89a\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00'
+            b'\xff\xff\xff!\xf9\x04\x00\x00\x00\x00\x00,\x00\x00\x00\x00'
+            b'\x01\x00\x01\x00\x00\x02\x02D\x01\x00;'
+        )
+        book = Book.objects.create(title='Img Book', age_min=1, age_max=3)
+        book.cover_image.save('cover.gif', SimpleUploadedFile('cover.gif', gif, 'image/gif'), save=True)
+        page = Page.objects.create(book=book, page_no=1, text_en='Hi')
+        page.image.save('p1.gif', SimpleUploadedFile('p1.gif', gif, 'image/gif'), save=True)
+        new_book = copy_book(book)
+        self.assertNotEqual(new_book.cover_image.name, book.cover_image.name)
+        new_page = new_book.pages.get(page_no=1)
+        self.assertNotEqual(new_page.image.name, page.image.name)
+        with new_book.cover_image.open('rb') as f:
+            self.assertEqual(f.read(), gif)
+        with new_page.image.open('rb') as f:
+            self.assertEqual(f.read(), gif)
+
+    def test_copy_view_requires_staff(self):
+        """複製APIはスタッフのみ実行できる"""
+        url = reverse('book-copy', args=[self.book.pk])
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse('login'), response.url)
+        self.client.login(username='copyuser', password='testpass123')
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(Book.objects.count(), 1)
+        self.client.login(username='copystaff', password='testpass123')
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Book.objects.count(), 2)
+        copied = Book.objects.exclude(pk=self.book.pk).get()
+        self.assertEqual(copied.title, 'Copy Me（コピー）')
+        self.assertEqual(copied.status, Book.STATUS_DRAFT)
+
+    def test_admin_action_duplicates_books(self):
+        """Admin Actionから複製できる"""
+        admin_user = get_user_model().objects.create_superuser(
+            username='copyadmin', password='testpass123', email='a@example.com')
+        self.client.force_login(admin_user)
+        response = self.client.post(reverse('admin:books_book_changelist'), {
+            'action': 'duplicate_books',
+            '_selected_action': [str(self.book.pk)],
+        }, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Book.objects.count(), 2)
+        copied = Book.objects.exclude(pk=self.book.pk).get()
+        self.assertEqual(copied.title, 'Copy Me（コピー）')
+        self.assertEqual(copied.status, Book.STATUS_DRAFT)
+        self.assertEqual(copied.pages.count(), 2)
