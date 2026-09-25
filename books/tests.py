@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import IntegrityError
+from django.forms import modelform_factory
 from django.test import TestCase, override_settings
 from django.urls import reverse
 
@@ -37,6 +38,81 @@ class BookModelTests(TestCase):
             status=Book.STATUS_PUBLISHED)
         book.full_clean()
         self.assertEqual(book.status, Book.STATUS_PUBLISHED)
+
+
+class BookValidationTests(TestCase):
+    """#41: 年齢の範囲と画像バリデーション"""
+
+    def test_age_over_12_raises_validation_error(self):
+        book = Book(title='Test', age_min=2, age_max=13)
+        with self.assertRaises(ValidationError):
+            book.full_clean()
+
+    def test_age_min_over_12_raises_validation_error(self):
+        book = Book(title='Test', age_min=13, age_max=13)
+        with self.assertRaises(ValidationError):
+            book.full_clean()
+
+    def test_invalid_image_extension_raises_validation_error(self):
+        book = Book(title='Test', age_min=2, age_max=5)
+        book.cover_image = SimpleUploadedFile('cover.gif', b'GIF89a', content_type='image/gif')
+        with self.assertRaises(ValidationError):
+            book.full_clean()
+
+    def test_oversized_image_raises_validation_error(self):
+        book = Book(title='Test', age_min=2, age_max=5)
+        big = b'\x89PNG\r\n' + b'0' * (5 * 1024 * 1024 + 1)
+        book.cover_image = SimpleUploadedFile('cover.png', big, content_type='image/png')
+        with self.assertRaises(ValidationError):
+            book.full_clean()
+
+    def test_valid_image_passes(self):
+        book = Book(title='Test', age_min=2, age_max=5)
+        book.cover_image = SimpleUploadedFile('cover.png', b'\x89PNG\r\n', content_type='image/png')
+        book.full_clean()
+
+
+class PageValidationTests(TestCase):
+    """#41: 英文必須とページ画像バリデーション"""
+
+    def setUp(self):
+        self.book = Book.objects.create(title='Test', age_min=2, age_max=5)
+
+    def test_empty_text_en_raises_validation_error(self):
+        page = Page(book=self.book, page_no=1, text_en='   ')
+        with self.assertRaises(ValidationError):
+            page.full_clean()
+
+    def test_invalid_image_extension_raises_validation_error(self):
+        page = Page(book=self.book, page_no=1, text_en='Hello')
+        page.image = SimpleUploadedFile('page.txt', b'hello', content_type='text/plain')
+        with self.assertRaises(ValidationError):
+            page.full_clean()
+
+
+class AdminFormValidationTests(TestCase):
+    """#41: adminフォーム経由でも不正入力を拒否できること"""
+
+    def test_book_form_rejects_age_over_12(self):
+        BookForm = modelform_factory(Book, fields='__all__')
+        form = BookForm(data={'title': 'Test', 'age_min': 2, 'age_max': 13, 'status': 'draft'})
+        self.assertFalse(form.is_valid())
+
+    def test_book_form_rejects_invalid_image(self):
+        BookForm = modelform_factory(Book, fields='__all__')
+        form = BookForm(
+            data={'title': 'Test', 'age_min': 2, 'age_max': 5, 'status': 'draft'},
+            files={'cover_image': SimpleUploadedFile('x.gif', b'GIF89a', content_type='image/gif')},
+        )
+        self.assertFalse(form.is_valid())
+        self.assertIn('cover_image', form.errors)
+
+    def test_page_form_rejects_empty_text_en(self):
+        book = Book.objects.create(title='Test', age_min=2, age_max=5)
+        PageForm = modelform_factory(Page, fields='__all__')
+        form = PageForm(data={'book': book.pk, 'page_no': 1, 'text_en': '   '})
+        self.assertFalse(form.is_valid())
+        self.assertIn('text_en', form.errors)
 
 
 class PageModelTests(TestCase):
@@ -443,6 +519,64 @@ class ReadingProgressViewTests(TestCase):
         response = self.client.get(reverse('book-detail', args=[self.book.pk]), {'p': '2'})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(ReadingProgress.objects.count(), 0)
+
+
+class ResumeBannerTests(TestCase):
+    """#52「続きから読む」導線: 一覧・詳細の表示チェック"""
+
+    def setUp(self):
+        User = get_user_model()
+        self.user = User.objects.create_user(username='resume1', password='testpass123')
+        self.book = Book.objects.create(title='Resume Book', age_min=2, age_max=5, status=Book.STATUS_PUBLISHED)
+        Page.objects.create(book=self.book, page_no=1, text_en='Page One')
+        Page.objects.create(book=self.book, page_no=2, text_en='Page Two')
+        Page.objects.create(book=self.book, page_no=3, text_en='Page Three')
+
+    def test_detail_shows_resume_banner_when_saved_page_differs(self):
+        """保存p.3で?p=1を開くと?p=3への再開バナーが出る"""
+        ReadingProgress.objects.create(user=self.user, book=self.book, last_page_no=3)
+        self.client.login(username='resume1', password='testpass123')
+        response = self.client.get(reverse('book-detail', args=[self.book.pk]), {'p': '1'})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'つづきから読む')
+        self.assertContains(response, '?p=3')
+
+    def test_detail_hides_resume_banner_when_same_page(self):
+        """保存ページと開いているページが同じならバナーは出ない"""
+        ReadingProgress.objects.create(user=self.user, book=self.book, last_page_no=2)
+        self.client.login(username='resume1', password='testpass123')
+        response = self.client.get(reverse('book-detail', args=[self.book.pk]), {'p': '2'})
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'つづきから読む')
+
+    def test_detail_hides_resume_banner_without_progress(self):
+        """進捗がなければバナーは出ない"""
+        self.client.login(username='resume1', password='testpass123')
+        response = self.client.get(reverse('book-detail', args=[self.book.pk]), {'p': '1'})
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'つづきから読む')
+
+    def test_detail_hides_resume_banner_for_anonymous(self):
+        """未ログインではバナーは出ない"""
+        response = self.client.get(reverse('book-detail', args=[self.book.pk]), {'p': '1'})
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'つづきから読む')
+
+    def test_list_shows_resume_button_when_progress_exists(self):
+        """一覧では進捗がある場合のみ再開ボタンが出て保存ページへ遷移できる"""
+        ReadingProgress.objects.create(user=self.user, book=self.book, last_page_no=3)
+        self.client.login(username='resume1', password='testpass123')
+        response = self.client.get(reverse('book-list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'つづきから読む')
+        self.assertContains(response, f'/books/{self.book.pk}/?p=3')
+
+    def test_list_hides_resume_button_without_progress(self):
+        """一覧では進捗がなければ再開ボタンは出ない"""
+        self.client.login(username='resume1', password='testpass123')
+        response = self.client.get(reverse('book-list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, 'つづきから読む')
 
 
 class FavoriteViewTests(TestCase):
