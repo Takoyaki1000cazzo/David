@@ -45,6 +45,8 @@ services:
         condition: service_healthy
 
   nginx:
+    # 開発は :8000 直結（runserver が /static/ を配信）。
+    # 本番は :80 経由（collectstatic 済みの staticfiles を配信）。
     image: nginx:stable-alpine
     container_name: david-nginx
     restart: unless-stopped
