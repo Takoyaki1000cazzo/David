@@ -97,6 +97,9 @@ python manage.py check
 python manage.py migrate
 ```
 
+pull等で更新があった場合は、再度 `migrate` を実行してください（新マイグレーションの適用）。
+未適用の有無は `python manage.py showmigrations` で確認できます。
+
 ## 6. サンプルデータ投入（任意）
 
 ```bash
