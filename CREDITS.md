@@ -14,6 +14,8 @@
 | I Can Make Things! | Mini Shrinivasan | Tanvee Nabar | Free Kids Books 版PDF | CC（StoryWeaver 公開条件） |
 | Did You Hear? | Sejal Mehta | Rohan Chakravarty | Free Kids Books 版PDF | CC BY 4.0 |
 | Smile Please! | Sanjiv Jaiswal 'Sanjay'（訳: Manisha Chaudhry） | Ajit Narayan | Free Kids Books 版PDF | CC BY 4.0 |
+| I Like to Read | Letta Machoga | Wiehan de Jager | Free Kids Books 版PDF（原典: African Storybook Initiative） | CC BY 4.0 |
+| Curly and Straight | Radha HS | Ruchi Shah | 提供PDF（StoryWeaver版） | CC（StoryWeaver 公開条件） |
 
 利用条件：作者・出典・ライセンスの表示（アプリ内にクレジット表記済み：`books/_credits.html`）。
 CC BY 4.0 全文: https://creativecommons.org/licenses/by/4.0/
