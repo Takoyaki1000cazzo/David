@@ -57,7 +57,7 @@ docker compose up -d
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python manage.py migrate
-python manage.py loaddata sample_books  # サンプル絵本データ投入（The Red Apple）
+python manage.py loaddata free_books_seed sample_users sample_favorites sample_progress  # サンプル絵本データ投入
 python manage.py runserver
 ```
 詳細はチームチャット送付の手順書を参照。`.env` の実値は共有しない。
