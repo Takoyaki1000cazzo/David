@@ -4,7 +4,7 @@
     "pk": 1,
     "fields": {
       "user": 2,
-      "book": 1,
+      "book": 10,
       "created_at": "2026-09-21T00:00:00Z"
     }
   },
@@ -13,7 +13,7 @@
     "pk": 2,
     "fields": {
       "user": 2,
-      "book": 2,
+      "book": 11,
       "created_at": "2026-09-21T00:00:10Z"
     }
   },
@@ -22,7 +22,7 @@
     "pk": 3,
     "fields": {
       "user": 1,
-      "book": 3,
+      "book": 18,
       "created_at": "2026-09-21T00:00:20Z"
     }
   }

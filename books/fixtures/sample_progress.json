@@ -4,7 +4,7 @@
     "pk": 1,
     "fields": {
       "user": 2,
-      "book": 1,
+      "book": 10,
       "last_page_no": 2,
       "updated_at": "2026-09-21T00:00:00Z"
     }
@@ -14,7 +14,7 @@
     "pk": 2,
     "fields": {
       "user": 1,
-      "book": 3,
+      "book": 18,
       "last_page_no": 1,
       "updated_at": "2026-09-21T00:00:10Z"
     }
