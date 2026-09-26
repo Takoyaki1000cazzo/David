@@ -91,10 +91,10 @@ python manage.py migrate
 ## 6. サンプルデータ投入（任意）
 
 ```bash
-python manage.py loaddata sample_books
+python manage.py loaddata free_books_seed sample_users sample_favorites sample_progress
 ```
 
-絵本1件＋ページ2件が入ります。
+絵本10件（各3ページ）＋ユーザー・お気に入り・進捗のサンプルが入ります。
 
 ## 7. 管理ユーザ作成（任意・adminを使う場合）
 
