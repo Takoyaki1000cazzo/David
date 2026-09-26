@@ -13,6 +13,12 @@ else
 fi
 
 if [ "${1:-}" = "--reset" ]; then
+  echo "WARNING: this deletes all data in the dev database."
+  read -r -p "Type YES to continue: " CONFIRM
+  if [ "$CONFIRM" != "YES" ]; then
+    echo "Aborted."
+    exit 1
+  fi
   echo "flushing database..."
   "$PY" manage.py flush --noinput
 fi

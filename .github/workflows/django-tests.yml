@@ -62,5 +62,10 @@ jobs:
         # which requires CREATE privileges beyond `david.*`.
         run: mysql -h 127.0.0.1 -uroot -proot -e "GRANT ALL PRIVILEGES ON *.* TO 'david'@'%'; FLUSH PRIVILEGES;"
 
+      - name: Check fixture images exist
+        # Read-only check: every image path in fixtures must exist under media/.
+        run: |
+          python -c "import json, glob, os, sys; missing = [f for p in glob.glob('books/fixtures/*.json') for x in json.load(open(p, encoding='utf-8')) for f in [x.get('fields', {}).get('cover_image') or x.get('fields', {}).get('image')] if f and not os.path.exists(os.path.join('media', f))]; print('missing:', missing or 'none'); sys.exit(1 if missing else 0)"
+
       - name: Run tests
         run: python manage.py test
