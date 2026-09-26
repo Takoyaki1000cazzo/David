@@ -42,6 +42,15 @@ python3 -c "import secrets; print(secrets.token_urlsafe(50))"
 
 `.env` の実値はコミットしないでください（`.gitignore` 済み）。
 
+変数一覧：
+
+| 変数 | 用途 | 備考 |
+|---|---|---|
+| `DJANGO_SECRET_KEY` | Django署名鍵 | 必須。ランダム値に置換 |
+| `DEBUG` | デバッグモード | 開発は `True`、本番は `False` |
+| `MYSQL_*` | DB接続情報 | Compose・直MySQL共通 |
+| `ALLOWED_HOSTS` | 公開ホスト名（カンマ区切り） | 本番公開時のみ設定、開発時は空で可 |
+
 ## 3. DBを起動する（Docker Compose・標準）
 
 ```bash
