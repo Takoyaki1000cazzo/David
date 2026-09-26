@@ -25,4 +25,6 @@ fi
 
 echo "loading fixtures..."
 "$PY" manage.py loaddata sample_users free_books_seed sample_progress sample_favorites
+echo "verifying..."
+"$PY" manage.py check_test_data
 echo "done."

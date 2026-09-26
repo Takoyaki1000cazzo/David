@@ -54,13 +54,14 @@
 git checkout main && git pull origin main
 cp .env.example .env  # DJANGO_SECRET_KEYのみ生成して置換
 docker compose up -d
-python3 -m venv .venv && source .venv/bin/activate
+python3 -m venv .venv && source .venv/bin/activate  # Linux/macOS。Windowsは `.venv\Scripts\activate`
 pip install -r requirements.txt
 python manage.py migrate
 bash scripts/load-test-data.sh  # サンプルデータ投入（ユーザー・絵本・進捗・お気に入り）
 python manage.py runserver
 ```
 詳細はチームチャット送付の手順書を参照。`.env` の実値は共有しない。
+テストデータの詳細・リセットは [テストデータ投入・リセット手順](docs/test-data.md) を参照。
 
 ## 8. ロードマップ案
 - [x] 初期セットアップ（#1 マージ済み）

@@ -67,5 +67,10 @@ jobs:
         run: |
           python -c "import json, glob, os, sys; missing = [f for p in glob.glob('books/fixtures/*.json') for x in json.load(open(p, encoding='utf-8')) for f in [x.get('fields', {}).get('cover_image') or x.get('fields', {}).get('image')] if f and not os.path.exists(os.path.join('media', f))]; print('missing:', missing or 'none'); sys.exit(1 if missing else 0)"
 
+      - name: Check fixture references
+        # Read-only check: book/user ids referenced in fixtures must be defined.
+        run: |
+          python -c "import json, glob, sys; pks = {}; refs = []; [pks.setdefault(x['model'], set()).add(x['pk']) for p in glob.glob('books/fixtures/*.json') for x in json.load(open(p, encoding='utf-8'))]; [refs.append((p, x['model'], x['pk'], k, v)) for p in glob.glob('books/fixtures/*.json') for x in json.load(open(p, encoding='utf-8')) for k, v in x.get('fields', {}).items() if k in ('book', 'user') and isinstance(v, int)]; model_of = {'book': 'books.book', 'user': 'auth.user'}; bad = [r for r in refs if r[4] not in pks.get(model_of[r[3]], set())]; print('bad refs:', bad or 'none'); sys.exit(1 if bad else 0)"
+
       - name: Run tests
         run: python manage.py test

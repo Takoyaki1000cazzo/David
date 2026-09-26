@@ -48,3 +48,4 @@ bash scripts/load-test-data.sh --reset
 - `flush` は全データを削除する。各PCのDBごとに実施が必要
 - 新規絵本は `status` が `draft` の場合があり、一覧に出ないときは公開状態を確認する
 - サンプルパスワードは開発専用。本番データには使わないこと
+- CIでfixtureの参照整合性・画像存在を自動検査している（`.github/workflows/django-tests.yml`）
