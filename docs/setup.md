@@ -91,10 +91,11 @@ python manage.py migrate
 ## 6. サンプルデータ投入（任意）
 
 ```bash
-python manage.py loaddata sample_books
+bash scripts/load-test-data.sh
 ```
 
-絵本1件＋ページ2件が入ります。
+フリー絵本10冊＋ユーザー・進捗・お気に入りが入ります。
+詳細は [テストデータ投入・リセット手順](test-data.md) を参照してください。
 
 ## 7. 管理ユーザ作成（任意・adminを使う場合）
 
