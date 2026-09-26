@@ -7,7 +7,7 @@ services:
     command: >
       sh -c "python manage.py migrate &&
              python manage.py collectstatic --noinput &&
-             gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3"
+             gunicorn config.wsgi:application -c gunicorn.conf.py"
     environment:
       DEBUG: "False"
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:?本番では ALLOWED_HOSTS を .env に設定してください}

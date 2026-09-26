@@ -42,6 +42,15 @@ python3 -c "import secrets; print(secrets.token_urlsafe(50))"
 
 `.env` の実値はコミットしないでください（`.gitignore` 済み）。
 
+変数一覧：
+
+| 変数 | 用途 | 備考 |
+|---|---|---|
+| `DJANGO_SECRET_KEY` | Django署名鍵 | 必須。ランダム値に置換 |
+| `DEBUG` | デバッグモード | 開発は `True`、本番は `False` |
+| `MYSQL_*` | DB接続情報 | Compose・直MySQL共通 |
+| `ALLOWED_HOSTS` | 公開ホスト名（カンマ区切り） | 本番公開時のみ設定、開発時は空で可 |
+
 ## 3. DBを起動する（Docker Compose・標準）
 
 ```bash
@@ -88,6 +97,9 @@ python manage.py check
 python manage.py migrate
 ```
 
+pull等で更新があった場合は、再度 `migrate` を実行してください（新マイグレーションの適用）。
+未適用の有無は `python manage.py showmigrations` で確認できます。
+
 ## 6. サンプルデータ投入（任意）
 
 ```bash
@@ -125,6 +137,12 @@ PRを出す前に必ず実行し、結果をPR本文の「動作確認」に記�
 - `http://127.0.0.1:8000/` が200を返す
 - `http://127.0.0.1:8000/admin/` が200を返す
 - `python manage.py test` がexit 0
+
+## 動作確認の目安（会員・お気に入り）
+
+- `/accounts/signup/` で登録→ログインできる
+- 詳細画面でお気に入り登録→ `/favorites/` に表示される
+- 詳細画面でしおり登録→一覧に「つづきから読む」が出る
 
 ## トラブルシューティング
 
