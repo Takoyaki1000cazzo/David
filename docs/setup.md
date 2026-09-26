@@ -103,10 +103,11 @@ pull等で更新があった場合は、再度 `migrate` を実行してくだ�
 ## 6. サンプルデータ投入（任意）
 
 ```bash
-python manage.py loaddata free_books_seed sample_users sample_favorites sample_progress
+bash scripts/load-test-data.sh
 ```
 
-絵本10件（各3ページ）＋ユーザー・お気に入り・進捗のサンプルが入ります。
+フリー絵本10冊＋ユーザー・進捗・お気に入りが入ります。
+詳細は [テストデータ投入・リセット手順](test-data.md) を参照してください。
 
 ## 7. 管理ユーザ作成（任意・adminを使う場合）
 

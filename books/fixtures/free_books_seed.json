@@ -4,7 +4,7 @@
     "pk": 10,
     "fields": {
       "title": "I Can Climb!",
-      "cover_image": null,
+      "cover_image": "covers/i-can-climb-10.png",
       "age_min": 2,
       "age_max": 5,
       "description": "A little boy learns to climb up. But can he climb down?",
@@ -22,7 +22,7 @@
       "page_no": 1,
       "text_en": "I can climb up.",
       "text_ja": "のぼれるよ。",
-      "image": null,
+      "image": "pages/i-can-climb-10-p1.png",
       "audio_url": null,
       "created_at": "2026-09-21T00:00:01Z"
     }
@@ -35,7 +35,7 @@
       "page_no": 2,
       "text_en": "I can climb down.",
       "text_ja": "おりられるよ。",
-      "image": null,
+      "image": "pages/i-can-climb-10-p2.png",
       "audio_url": null,
       "created_at": "2026-09-21T00:00:02Z"
     }
@@ -48,7 +48,7 @@
       "page_no": 3,
       "text_en": "Up and down, up and down!",
       "text_ja": "のぼって、おりて、のぼって、おりて！",
-      "image": null,
+      "image": "pages/i-can-climb-10-p3.png",
       "audio_url": null,
       "created_at": "2026-09-21T00:00:03Z"
     }
@@ -58,7 +58,7 @@
     "pk": 11,
     "fields": {
       "title": "My Friends",
-      "cover_image": null,
+      "cover_image": "covers/my-friends-11.png",
       "age_min": 2,
       "age_max": 5,
       "description": "I have many friends. One of them is really special!",
@@ -76,7 +76,7 @@
       "page_no": 1,
       "text_en": "I am Sam.",
       "text_ja": "ぼくはサムだよ。",
-      "image": null,
+      "image": "pages/my-friends-11-p1.png",
       "audio_url": null,
       "created_at": "2026-09-21T00:00:11Z"
     }
@@ -89,7 +89,7 @@
       "page_no": 2,
       "text_en": "This is my friend.",
       "text_ja": "こちらは友だち。",
-      "image": null,
+      "image": "pages/my-friends-11-p2.png",
       "audio_url": null,
       "created_at": "2026-09-21T00:00:12Z"
     }
@@ -102,7 +102,7 @@
       "page_no": 3,
       "text_en": "We play together.",
       "text_ja": "いっしょに遊ぶよ。",
-      "image": null,
+      "image": "pages/my-friends-11-p3.png",
       "audio_url": null,
       "created_at": "2026-09-21T00:00:13Z"
     }
@@ -112,7 +112,7 @@
     "pk": 12,
     "fields": {
       "title": "Fat King Thin Dog",
-      "cover_image": null,
+      "cover_image": "covers/fat-king-thin-dog-12.png",
       "age_min": 2,
       "age_max": 5,
       "description": "Run along with the Fat King after the Thin Dog!",
@@ -130,7 +130,7 @@
       "page_no": 1,
       "text_en": "Run, run, Fat King!",
       "text_ja": "はしれ、はしれ、ふとった王さま！",
-      "image": null,
+      "image": "pages/fat-king-thin-dog-12-p1.png",
       "audio_url": null,
       "created_at": "2026-09-21T00:00:21Z"
     }
@@ -143,7 +143,7 @@
       "page_no": 2,
       "text_en": "Run, run, Thin Dog!",
       "text_ja": "はしれ、はしれ、ほそい犬！",
-      "image": null,
+      "image": "pages/fat-king-thin-dog-12-p2.png",
       "audio_url": null,
       "created_at": "2026-09-21T00:00:22Z"
     }
@@ -156,7 +156,7 @@
       "page_no": 3,
       "text_en": "Run and run and run!",
       "text_ja": "はしって、はしって、はしって！",
-      "image": null,
+      "image": "pages/fat-king-thin-dog-12-p3.png",
       "audio_url": null,
       "created_at": "2026-09-21T00:00:23Z"
     }
@@ -166,7 +166,7 @@
     "pk": 13,
     "fields": {
       "title": "My Best Friend",
-      "cover_image": null,
+      "cover_image": "covers/my-best-friend-13.png",
       "age_min": 2,
       "age_max": 5,
       "description": "Would you like to have a very special friend?",
@@ -184,7 +184,7 @@
       "page_no": 1,
       "text_en": "Who is my best friend?",
       "text_ja": "いちばんの友だちはだれかな？",
-      "image": null,
+      "image": "pages/my-best-friend-13-p1.png",
       "audio_url": null,
       "created_at": "2026-09-21T00:00:31Z"
     }
@@ -197,7 +197,7 @@
       "page_no": 2,
       "text_en": "My best friend is you!",
       "text_ja": "いちばんの友だちはきみだよ！",
-      "image": null,
+      "image": "pages/my-best-friend-13-p2.png",
       "audio_url": null,
       "created_at": "2026-09-21T00:00:32Z"
     }
@@ -210,7 +210,7 @@
       "page_no": 3,
       "text_en": "Yes, you!",
       "text_ja": "そう、きみだよ！",
-      "image": null,
+      "image": "pages/my-best-friend-13-p3.png",
       "audio_url": null,
       "created_at": "2026-09-21T00:00:33Z"
     }
@@ -220,7 +220,7 @@
     "pk": 14,
     "fields": {
       "title": "The Moon and The Cap",
-      "cover_image": null,
+      "cover_image": "covers/the-moon-and-the-cap-14.png",
       "age_min": 2,
       "age_max": 5,
       "description": "Do you like to wear a cap on a sunny day?",
@@ -238,7 +238,7 @@
       "page_no": 1,
       "text_en": "The cap is on the chair.",
       "text_ja": "ぼうしが、いすのうえにあるよ。",
-      "image": null,
+      "image": "pages/the-moon-and-the-cap-14-p1.png",
       "audio_url": null,
       "created_at": "2026-09-21T00:00:41Z"
     }
@@ -251,7 +251,7 @@
       "page_no": 2,
       "text_en": "The moon shines above.",
       "text_ja": "つきが、うえでかがやいているよ。",
-      "image": null,
+      "image": "pages/the-moon-and-the-cap-14-p2.png",
       "audio_url": null,
       "created_at": "2026-09-21T00:00:42Z"
     }
@@ -264,7 +264,7 @@
       "page_no": 3,
       "text_en": "Good night, cap. Good night, moon.",
       "text_ja": "おやすみ、ぼうし。おやすみ、おつきさま。",
-      "image": null,
+      "image": "pages/the-moon-and-the-cap-14-p3.png",
       "audio_url": null,
       "created_at": "2026-09-21T00:00:43Z"
     }
@@ -274,7 +274,7 @@
     "pk": 15,
     "fields": {
       "title": "Curly and Straight",
-      "cover_image": null,
+      "cover_image": "covers/curly-and-straight-15-v2.png",
       "age_min": 2,
       "age_max": 5,
       "description": "Do you like curly tails or straight tails?",
@@ -292,7 +292,7 @@
       "page_no": 1,
       "text_en": "A curly tail.",
       "text_ja": "くるくるのしっぽ。",
-      "image": null,
+      "image": "pages/curly-and-straight-15-p1.png",
       "audio_url": null,
       "created_at": "2026-09-21T00:00:51Z"
     }
@@ -305,7 +305,7 @@
       "page_no": 2,
       "text_en": "A straight tail.",
       "text_ja": "まっすぐなしっぽ。",
-      "image": null,
+      "image": "pages/curly-and-straight-15-p2.png",
       "audio_url": null,
       "created_at": "2026-09-21T00:00:52Z"
     }
@@ -318,7 +318,7 @@
       "page_no": 3,
       "text_en": "Which one do you like?",
       "text_ja": "どっちがすき？",
-      "image": null,
+      "image": "pages/curly-and-straight-15-p3.png",
       "audio_url": null,
       "created_at": "2026-09-21T00:00:53Z"
     }
@@ -328,7 +328,7 @@
     "pk": 16,
     "fields": {
       "title": "I Can Make Things!",
-      "cover_image": null,
+      "cover_image": "covers/i-can-make-things-16.png",
       "age_min": 2,
       "age_max": 5,
       "description": "A boy who can make many things.",
@@ -346,7 +346,7 @@
       "page_no": 1,
       "text_en": "I can make a house.",
       "text_ja": "おうちが作れるよ。",
-      "image": null,
+      "image": "pages/i-can-make-things-16-p1.png",
       "audio_url": null,
       "created_at": "2026-09-21T00:01:01Z"
     }
@@ -359,7 +359,7 @@
       "page_no": 2,
       "text_en": "I can make a boat.",
       "text_ja": "ふねも作れるよ。",
-      "image": null,
+      "image": "pages/i-can-make-things-16-p2.png",
       "audio_url": null,
       "created_at": "2026-09-21T00:01:02Z"
     }
@@ -372,7 +372,7 @@
       "page_no": 3,
       "text_en": "I can make anything!",
       "text_ja": "なんでも作れるよ！",
-      "image": null,
+      "image": "pages/i-can-make-things-16-p3.png",
       "audio_url": null,
       "created_at": "2026-09-21T00:01:03Z"
     }
@@ -382,7 +382,7 @@
     "pk": 17,
     "fields": {
       "title": "I Like to Read",
-      "cover_image": null,
+      "cover_image": "covers/i-like-to-read-17.png",
       "age_min": 2,
       "age_max": 5,
       "description": "A boy wants to read a book to someone.",
@@ -400,7 +400,7 @@
       "page_no": 1,
       "text_en": "I like to read.",
       "text_ja": "本を読むのが好きだよ。",
-      "image": null,
+      "image": "pages/i-like-to-read-17-p1.png",
       "audio_url": null,
       "created_at": "2026-09-21T00:01:11Z"
     }
@@ -413,7 +413,7 @@
       "page_no": 2,
       "text_en": "I read to my cat.",
       "text_ja": "ねこに読んであげるよ。",
-      "image": null,
+      "image": "pages/i-like-to-read-17-p2.png",
       "audio_url": null,
       "created_at": "2026-09-21T00:01:12Z"
     }
@@ -426,7 +426,7 @@
       "page_no": 3,
       "text_en": "Read with me!",
       "text_ja": "いっしょに読もう！",
-      "image": null,
+      "image": "pages/i-like-to-read-17-p3.png",
       "audio_url": null,
       "created_at": "2026-09-21T00:01:13Z"
     }
@@ -436,7 +436,7 @@
     "pk": 18,
     "fields": {
       "title": "Did You Hear?",
-      "cover_image": null,
+      "cover_image": "covers/did-you-hear-18.png",
       "age_min": 2,
       "age_max": 5,
       "description": "Did you hear the bird sing? A sound-based story.",
@@ -454,7 +454,7 @@
       "page_no": 1,
       "text_en": "Did you hear the bird?",
       "text_ja": "鳥の声がきこえた？",
-      "image": null,
+      "image": "pages/did-you-hear-18-p1.png",
       "audio_url": null,
       "created_at": "2026-09-21T00:01:21Z"
     }
@@ -467,7 +467,7 @@
       "page_no": 2,
       "text_en": "Tweet! Tweet!",
       "text_ja": "ちゅん、ちゅん！",
-      "image": null,
+      "image": "pages/did-you-hear-18-p2.png",
       "audio_url": null,
       "created_at": "2026-09-21T00:01:22Z"
     }
@@ -480,7 +480,7 @@
       "page_no": 3,
       "text_en": "Did you hear it too?",
       "text_ja": "きみもきこえた？",
-      "image": null,
+      "image": "pages/did-you-hear-18-p3.png",
       "audio_url": null,
       "created_at": "2026-09-21T00:01:23Z"
     }
@@ -490,7 +490,7 @@
     "pk": 19,
     "fields": {
       "title": "Smile Please!",
-      "cover_image": null,
+      "cover_image": "covers/smile-please-19.png",
       "age_min": 2,
       "age_max": 5,
       "description": "A cheerful story about smiling together.",
@@ -508,7 +508,7 @@
       "page_no": 1,
       "text_en": "Smile, smile, smile!",
       "text_ja": "にこにこ、わらって！",
-      "image": null,
+      "image": "pages/smile-please-19-p1.png",
       "audio_url": null,
       "created_at": "2026-09-21T00:01:31Z"
     }
@@ -521,7 +521,7 @@
       "page_no": 2,
       "text_en": "You look happy.",
       "text_ja": "たのしそうだね。",
-      "image": null,
+      "image": "pages/smile-please-19-p2.png",
       "audio_url": null,
       "created_at": "2026-09-21T00:01:32Z"
     }
@@ -534,7 +534,7 @@
       "page_no": 3,
       "text_en": "We smile together.",
       "text_ja": "いっしょにわらおう。",
-      "image": null,
+      "image": "pages/smile-please-19-p3.png",
       "audio_url": null,
       "created_at": "2026-09-21T00:01:33Z"
     }

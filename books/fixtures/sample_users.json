@@ -3,7 +3,7 @@
     "model": "auth.user",
     "pk": 1,
     "fields": {
-      "password": "pbkdf2_sha256$1000000$EDCPqHkMm3pd4uNd9sc9YM$i0COMkbAcvttNuC0t+hQvVwNo8RaN0xuBw2r4D/pkzE=",
+      "password": "pbkdf2_sha256$1000000$QfHKcXjuWeNgm09tCyX6OI$EvGsSl5CkUC122zqUlBPx6a27jfbQmdLNi7pB3L/D+A=",
       "last_login": null,
       "is_superuser": false,
       "username": "teacher",
@@ -21,7 +21,7 @@
     "model": "auth.user",
     "pk": 2,
     "fields": {
-      "password": "pbkdf2_sha256$1000000$Aa9WfA1b8A8Nq9AFvUTAG7$q/R6yBUBAlM4yqJNtk1MGRowU3UBo4bDAknyBAPsSho=",
+      "password": "pbkdf2_sha256$1000000$3LHf96RUNMFj3AJd1P9xTH$l0aEHpnoA2eliVxw8rmDZVN6b4QCFC0q43EzH2CV+e0=",
       "last_login": null,
       "is_superuser": false,
       "username": "parent",
