@@ -36,7 +36,7 @@
 - `/admin/` 管理用
 
 ## 5. データモデル案
-- `Book`: title, cover_image(`media/covers/`), age_min, age_max（※必須・対象年齢区分ありで確定）, description, description_ja（※日英両方持つ）, created_at
+- `Book`: title, cover_image(`media/covers/`), age_min, age_max（※必須・対象年齢区分ありで確定）, description, description_ja（※日英両方持つ）, status（公開／下書き・既定は下書き）, published_at, created_at
 - `Page`: book(FK), page_no, text_en, text_ja（※確定）, image(`media/pages/`), audio_url(nullable), created_at
 - `Favorite`: user(FK), book(FK) — お気に入り登録
 - `ReadingProgress`: user(FK), book(FK), last_page_no — 続きから読む・しおり用
