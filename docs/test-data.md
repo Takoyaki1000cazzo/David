@@ -24,11 +24,18 @@
 bash scripts/load-test-data.sh
 ```
 
-参照順（ユーザー・絵本→進捗・お気に入り）を守ること。手動の場合は以下：
+参照順（ユーザー・絵本→進捗・お気に入り）を守ること。手動の場合は仮想環境を有効化してから以下（有効化手順は setup.md 参照）：
 
 ```bash
-.venv/Scripts/python.exe manage.py loaddata sample_users free_books_seed sample_progress sample_favorites
+python manage.py loaddata sample_users free_books_seed sample_progress sample_favorites
 ```
+
+有効化せず直接指定する場合：
+
+| OS | コマンド例 |
+|---|---|
+| Windows | `.venv/Scripts/python.exe manage.py ...` |
+| Linux / macOS | `.venv/bin/python manage.py ...` |
 
 ## リセット手順（初期状態に戻す）
 
